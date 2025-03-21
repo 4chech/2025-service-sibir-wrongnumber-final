@@ -25,13 +25,22 @@ def service_down():
     print("[service is down] - 104")
     exit(104)
 
-if len(sys.argv) != 5:
-    print(f"\nUsage: {sys.argv[0]} <ip> <port> <login> <flag_id> <flag>\n")
-    print(f"Example: {sys.argv[0]} 192.168.1.1 8080 admin goijfdsogijdpfoig c01d4567-e89b-12d3-a456-426600000010\n")
+if len(sys.argv) != 4:
+    print(f"\nUsage: {sys.argv[0]} <ip> <port> <flag_id> <flag>\n")
+    print(f"Example: {sys.argv[0]} 192.168.1.1 8080 goijfdsogijdpfoig c01d4567-e89b-12d3-a456-426600000010\n")
     exit(0)
 
 
 # service functions
+
+def get_random_login():
+    try:
+        with open('names/logins.txt', 'r') as f:
+            logins = f.readlines()
+            return random.choice(logins).strip()
+    except Exception as e:
+        print(f"Error reading logins file: {str(e)}")
+        return None
 
 def put_flag(ip, port, login, flag):
     try:
@@ -77,7 +86,6 @@ def put_flag(ip, port, login, flag):
         # Отправляем POST запрос на регистрацию
         response = session.post(register_url, data=data, files=files)
         
-
         # Проверяем результат регистрации
         if response.status_code != 200:
             print(f"Failed to register user: {response.status_code}")
@@ -151,12 +159,34 @@ def check_flag(ip, port, login, flag, session):
         return False
 
 
+def get_random_car_name():
+    try:
+        with open('names/cars.txt', 'r') as f:
+            cars = f.readlines()
+            return random.choice(cars).strip()
+    except Exception as e:
+        print(f"Error reading cars file: {str(e)}")
+        return "Test Car"
+
+def get_random_description():
+    try:
+        with open('names/description.txt', 'r', encoding='utf-8') as f:
+            # Читаем весь файл и разделяем по пустым строкам
+            content = f.read()
+            # Разделяем по двойному переносу строки и фильтруем пустые строки
+            descriptions = [desc.strip() for desc in content.split('\n\n') if desc.strip()]
+            if not descriptions:
+                print("No descriptions found in file")
+                return "Test Description"
+            return random.choice(descriptions)
+    except Exception as e:
+        print(f"Error reading description file: {str(e)}")
+        return "Test Description"
+
 def create_post(ip, port, session):
     try:
         # Сначала проверим, что мы авторизованы
         main_page = session.get(f"http://{ip}:{port}/")
-        print("\nChecking authorization:")
-        print(f"Main page status: {main_page.status_code}")
         if "Выйти" not in main_page.text:
             print("Not logged in - no 'Выйти' button found")
             return False
@@ -176,10 +206,17 @@ def create_post(ip, port, session):
         random_car = random.choice(car_files)
         car_path = os.path.join("images/cars", random_car)
 
+        # Получаем случайное название машины и описание
+        car_name = get_random_car_name()
+        description = get_random_description()
+        
+        print("\nSelected description:")
+        print(description)
+
         # Подготавливаем данные формы
         data = {
-            'car_mark': 'Test Car',
-            'description': 'Test Description',
+            'car_mark': car_name,
+            'description': description,
             'speed': '100',
             'handling': '10',
             'durability': '10',
@@ -194,12 +231,6 @@ def create_post(ip, port, session):
                 'picture': (random_car, car_file, 'image/jpeg')
             }
             
-            print("\nDebug information:")
-            print("1. Request details:")
-            print(f"URL: {post_url}")
-            print(f"Form data: {data}")
-            print(f"File being sent: {random_car}")
-            
             # Отправляем POST запрос
             response = session.post(
                 post_url,
@@ -207,19 +238,6 @@ def create_post(ip, port, session):
                 files=files,
                 allow_redirects=True
             )
-        
-        print("\n2. Response details:")
-        print(f"Status code: {response.status_code}")
-        print(f"Response headers: {response.headers}")
-        print(f"Response text: {response.text}")
-        
-        # Проверяем, есть ли сообщение об ошибке в ответе
-        soup = BeautifulSoup(response.text, 'html.parser')
-        flash_messages = soup.find_all(class_='alert')
-        if flash_messages:
-            print("\n3. Flash messages found:")
-            for message in flash_messages:
-                print(f"Message: {message.text.strip()}")
         
         if response.status_code == 200 or response.status_code == 302:
             if "У вас нет прав на создание публикаций" in response.text:
@@ -243,19 +261,26 @@ def set_price():
     pass
 
 if __name__ == "__main__":
-    session = put_flag(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
-    if not session:
-        service_corrupt()
-        exit(102)
-        
-    if not check_flag(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], session):
-        service_corrupt()
-        exit(102)
-        
-    if not create_post(sys.argv[1], sys.argv[2], session):
-        service_corrupt()
-        exit(102)
-        
-    # Если все операции выполнены успешно
-    service_up()
-    exit(101)
+    for i in range(500):
+        login = get_random_login()
+        if not login:
+            print("Failed to get random login")
+            service_corrupt()
+            exit(102)
+            
+        session = put_flag(sys.argv[1], sys.argv[2], login, i)
+        if not session:
+            service_corrupt()
+            exit(102)
+            
+        if not check_flag(sys.argv[1], sys.argv[2], login, sys.argv[3], i):
+            service_corrupt()
+            exit(102)
+            
+        if not create_post(sys.argv[1], sys.argv[2], i):
+            service_corrupt()
+            exit(102)
+            
+        # Если все операции выполнены успешно
+        service_up()
+        exit(101)
