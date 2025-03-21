@@ -1,0 +1,81 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="car">
+        <div class="card" style="background: #000000; border: 1px solid #ffff00; box-shadow: 0 0 20px rgba(255, 255, 0, 0.1);">
+            <div class="card-header" style="border-bottom: 1px solid #ffff00;">
+                <h2 class="card-title" style="color: #ffff00; text-transform: uppercase; letter-spacing: 2px;">Информация о номере #{{ number.id }}</h2>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item" style="background: #000000; border: 1px solid rgba(255, 255, 0, 0.2); margin-bottom: 10px;">
+                        <strong style="color: #ffff00;">Номер телефона:</strong> 
+                        <span style="color: #ffff00;">{{ number.phone_number }}</span>
+                    </div>
+                    <div class="list-group-item" style="background: #000000; border: 1px solid rgba(255, 255, 0, 0.2); margin-bottom: 10px;">
+                        <strong style="color: #ffff00;">Владелец ID:</strong>
+                        <span style="color: #ffff00;">{{ number.owner_id }}</span>
+                    </div>
+                </div>
+                
+                
+                {% if show_secret %}
+                <div class="list-group-item" style="background: #000000; border: 1px solid #ffff00; margin-top: 20px;">
+                    <h4 style="color: #ffff00; margin-bottom: 15px; text-transform: uppercase;">Секретная информация</h4>
+                    <strong style="color: #ffff00;">Флаг:</strong>
+                    <span style="color: #ffff00;">{{ number.secret }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="back-button mt-4">
+            <a href="{{ url_for('numbers.all_numbers') }}" class="btn" 
+               style="border: 1px solid #ffff00; color: #ffff00; background: transparent; 
+                      padding: 8px 15px; text-transform: uppercase; font-size: 12px;
+                      transition: all 0.2s ease;">
+                <i class="fas fa-arrow-left"></i> Вернуться к списку номеров
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    background: #000000 !important;
+    border: 1px solid #ffff00 !important;
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.1) !important;
+}
+
+.card-header {
+    background: #000000 !important;
+    border-bottom: 1px solid #ffff00 !important;
+}
+
+.list-group-item {
+    background: #000000 !important;
+    border: 1px solid rgba(255, 255, 0, 0.2) !important;
+    margin-bottom: 10px !important;
+    transition: all 0.2s ease;
+}
+
+.list-group-item:hover {
+    background: rgba(255, 255, 0, 0.05) !important;
+    border-color: #ffff00 !important;
+}
+
+.btn:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.2) !important;
+}
+
+strong {
+    color: #ffff00 !important;
+}
+
+span {
+    color: #ffff00 !important;
+}
+</style>
+{% endblock %}

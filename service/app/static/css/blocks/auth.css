@@ -1,0 +1,118 @@
+.auth-form {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    background: #000000;
+    border: 1px solid #ffff00;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.1);
+}
+
+.auth-form .form-control {
+    background: #000000;
+    border: 1px solid rgba(255, 255, 0, 0.3);
+    color: #ffffff;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.auth-form .form-control:focus {
+    border-color: #ffff00;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.2);
+    outline: none;
+}
+
+.auth-form .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.auth-form .btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid #ffff00;
+    color: #ffff00;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 20px;
+    transition: all 0.2s ease;
+}
+
+.auth-form .btn:hover {
+    background: rgba(255, 255, 0, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.2);
+}
+
+.auth-form .invalid-feedback {
+    color: #ff4444;
+    font-size: 14px;
+    margin-top: -10px;
+    margin-bottom: 15px;
+}
+
+.auth-form .form-check {
+    margin: 15px 0;
+}
+
+.auth-form .form-check-input {
+    background-color: #000000;
+    border-color: rgba(255, 255, 0, 0.3);
+}
+
+.auth-form .form-check-input:checked {
+    background-color: #ffff00;
+    border-color: #ffff00;
+}
+
+.auth-form .form-check-label {
+    color: #ffffff;
+}
+
+.auth-title {
+    color: #ffff00;
+    text-align: center;
+    font-size: 24px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+}
+
+.auth-form input[type="file"] {
+    position: relative;
+    z-index: 1;
+    padding: 12px;
+    background: #000000;
+    border: 1px solid #ffff00;
+    color: #ffff00;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+}
+
+.auth-form input[type="file"]:hover {
+    background: rgba(255, 255, 0, 0.1);
+    box-shadow: 0 0 15px rgba(255, 255, 0, 0.2);
+}
+
+.auth-form input[type="file"]::file-selector-button {
+    display: none;
+}
+
+.auth-form input[type="file"]::before {
+    content: "Выберите файл";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ffff00;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    pointer-events: none;
+} 

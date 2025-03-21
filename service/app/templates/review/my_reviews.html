@@ -1,0 +1,30 @@
+{% extends 'main/base.html' %}
+
+{% block title %} История оценок {% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blocks/table.css') }}">
+{% endblock %}
+
+{% block content %}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Оценка</th>
+            <th scope="col">Комментарий к оценке</th>
+            <th scope="col">Дата оценки </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for review in reviews %}
+            {% if current_user.id == review.valuer_id %}
+                <tr scope="row">
+                    <td>{{ review.rating }}</td>
+                    <td>{{ review.comment }}</td>
+                    <td>{{ review.date }}</td>
+                </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,23 @@
+<div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+    <a href="{{ url_for('post.all') }}" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+     <img class= "header__img" src="{{url_for('static', filename='img/keva.png') }}" alt="keva">
+    </a>
+
+    <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+      <li><a href="{{ url_for('post.all') }}" class="nav-link px-2 text-secondary">Главная</a></li>
+        {% if current_user.is_authenticated %} <!-- Идейно одна из уязвимостей, можно сделать так, чтобы в сервисе необходимо было в сурсах прописать код для разделеня кнопок-->
+        <li><a href="{{ url_for('post.create')}}" class="nav-link px-2 text-secondary">Добавить авто</a></li>
+        <li><a href="{{ url_for('review.my_reviews')}}" class = "nav-link px2 text-secondary">История оценок</a></li>
+        {% endif %}
+    </ul>
+
+    <div class="text-end">
+        {% if current_user.is_authenticated %}
+            <span> Добро пожаловать! {{ current_user.login }}</span>
+            <a href="{{ url_for('user.logout') }}" class="btn btn-outline-light">Выйти</a>
+        {% else %}
+            <a href="{{ url_for('user.login') }}" class="btn btn-outline-light me-2">Войти</a>
+            <a href="{{ url_for('user.register') }}" class="btn btn-warning">Регистрация</a>
+        {% endif %}
+    </div>
+</div>

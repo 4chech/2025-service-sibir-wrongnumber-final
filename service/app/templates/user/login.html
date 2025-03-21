@@ -1,0 +1,25 @@
+{% extends 'main/base.html' %}
+
+{% block title%}Авторизация{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blocks/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-form">
+    <h2 class="auth-title">Авторизация</h2>
+    <form method="post" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        {{ form.login(class="form-control", placeholder="Логин") }}
+        {{ form.password(class="form-control", placeholder="Пароль") }}
+        
+        <div class="form-check">
+            {{ form.remember(class="form-check-input") }}
+            {{ form.remember.label(class="form-check-label") }}
+        </div>
+        
+        {{ form.submit(class="btn") }}
+    </form>
+</div>
+{% endblock %}

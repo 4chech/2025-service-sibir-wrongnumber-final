@@ -1,0 +1,87 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="car">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title" style="color: #ffff00; text-transform: uppercase; letter-spacing: 2px;">Список всех номеров</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-container" style="background: #000000; border: 1px solid #ffff00; border-radius: 8px; padding: 20px;">
+                    <table class="table" style="margin-bottom: 0; background-color: #000000;">
+                        <thead>
+                            <tr>
+                                <th style="color: #ffff00; border-bottom: 2px solid #ffff00; text-transform: uppercase; font-size: 14px; background-color: #000000;">ID</th>
+                                <th style="color: #ffff00; border-bottom: 2px solid #ffff00; text-transform: uppercase; font-size: 14px; background-color: #000000;">Номер телефона</th>
+                                <th style="color: #ffff00; border-bottom: 2px solid #ffff00; text-transform: uppercase; font-size: 14px; background-color: #000000;">Владелец</th>
+                                <th style="color: #ffff00; border-bottom: 2px solid #ffff00; text-transform: uppercase; font-size: 14px; background-color: #000000;">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody style="background-color: #000000;">
+                            {% for number in numbers %}
+                            <tr style="border-bottom: 1px solid rgba(255, 255, 0, 0.2); background-color: #000000;">
+                                <td style="color: #ffff00; padding: 15px; background-color: #000000;">#{{ number.id }}</td>
+                                <td style="color: #ffff00; padding: 15px; background-color: #000000;">{{ number.phone_number }}</td>
+                                <td style="color: #ffff00; padding: 15px; background-color: #000000;">{{ number.owner_login }}</td>
+                                <td class="actions" style="padding: 15px; background-color: #000000;">
+                                    <a href="{{ url_for('numbers.checkout', login=number.owner_login) }}" class="btn" 
+                                       style="border: 1px solid #ffff00; color: #ffff00; background: transparent; 
+                                              padding: 8px 15px; text-transform: uppercase; font-size: 12px;
+                                              transition: all 0.2s ease;">
+                                        Подробнее
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn:hover {
+    background-color: rgba(255, 255, 0, 0.1) !important;
+    box-shadow: 0 0 10px rgba(255, 255, 0, 0.2) !important;
+}
+
+.table tr:hover {
+    background-color: rgba(255, 255, 0, 0.05) !important;
+}
+
+.card {
+    background: #000000 !important;
+    border: 1px solid #ffff00 !important;
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.1) !important;
+}
+
+.card-header {
+    border-bottom: 1px solid #ffff00 !important;
+}
+
+.table {
+    background-color: #000000 !important;
+}
+
+.table thead th {
+    background-color: #000000 !important;
+}
+
+.table tbody tr {
+    background-color: #000000 !important;
+}
+
+.table td {
+    background-color: #000000 !important;
+    color: #ffff00 !important;
+}
+
+.table th {
+    background-color: #000000 !important;
+    color: #ffff00 !important;
+}
+</style>
+{% endblock %}

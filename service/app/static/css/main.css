@@ -1,0 +1,58 @@
+@import url('fonts.css');
+body {
+    margin: 0;
+    padding: 0;
+    background: #000000;
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+}
+
+.page {
+    padding-top: 80px;
+    min-height: 100vh;
+    background: #000000;
+}
+
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #000000;
+    border-bottom: 1px solid #ffff00;
+    padding: 10px 20px;
+    z-index: 1000;
+}
+
+h1 {
+    font-family: 'Orbitron', sans-serif; /* Киберпанковский шрифт */
+    font-weight: 400;
+    text-shadow: 0 0 10px #ffff00; /* Неоновое свечение желтым */
+}
+
+.header__img {
+    display: block;
+    width: 48px;
+    height: 48px;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.8)); /* Эффект тени с желтым светом */
+}
+
+.footer__img {
+    display: block;
+    width: 150px;
+    height: 150px;
+    filter: drop-shadow(0 0 15px rgba(255, 255, 0, 0.8)); /* Эффект тени с желтым светом */
+}
+
+footer {
+    margin-top: auto;
+    padding: 20px;
+    background: #000000;
+    border-top: 1px solid #ffff00;
+}

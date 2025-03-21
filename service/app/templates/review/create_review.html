@@ -1,0 +1,12 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Оценить автомобиль {% endblock %}
+
+{% block content %}
+<h1>Оцените автомобиль: {{ post.car_mark }}</h1>
+<form method="post" action="{{ url_for('review.create_review', post_id=post.id) }}" enctype="multipart/form-data" class="form-control d-flex flex-column gap-2">
+    <input name="rating" placeholder="Оцените автомобиль (1-10)" type="number" min="1" max="10" class='form-control' required>
+    <input name="comment" placeholder="Комментарий к оценке" type="text" class='form-control' required>
+    <button type="submit" class='btn btn-primary'>Отправить отзыв</button>
+</form>
+{% endblock %}

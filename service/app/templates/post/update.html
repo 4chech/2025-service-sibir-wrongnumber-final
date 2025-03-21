@@ -1,0 +1,20 @@
+{% extends 'main/base.html' %}
+
+{% block title %} Редактирование объявления {{ post.car_mark }} {% endblock %}
+
+
+{% block content %}
+<form method = "post" class="form-control d-flex flex-column gap-2">
+    <input value="{{ post.car_mark }}" name = "car_mark" type = "text"  placeholder="Марка" class="form-control">
+    <input value="{{ post.price }}" name = "price" type = "text" placeholder="Цена" class="form-control">
+    {{ form.valuer }}
+    <input value="{{ post.description }}" name = "description" type = "text" placeholder="Измените описание вашего авто" class="form-control">
+    <input value="{{ post.speed }}" name = "speed" placeholder = "Скорость (км/ч)" type = "number" class = "form-control" > <!-- Класс потом спросить + тип -->
+    <input value="{{ post.handling }}" name = "handling" placeholder = "Управляемость(1-10)" type = "number" min="1" max="10" class = "form-control" >
+    <input value="{{ post.durability }}" name = "durability" placeholder = "Устойчивость(1-10)" type = "number" min="1" max="10" type = "text" class = "form-control" >
+    <input value="{{ post.fuel_consumption }}" name = "fuel_consumption" placeholder = "Расход топлива(л/100 км)" type = "number" class = "form-control" >
+    <input value="{{ post.seating_capacity }}" name = "seating_capacity" placeholder = "Количество мест" type = "number" min = "1" class = "form-control" >
+    <input value="{{ post.customizations }}" name = "customizations" placeholder = "Модификации" type = "text" class = "form-control" >
+    <input value = "Обновить" type = "submit" class ="btn btn-success">
+</form>
+{% endblock %}

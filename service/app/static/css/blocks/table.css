@@ -1,0 +1,168 @@
+.table-container {
+	padding: 20px;
+	border-radius: 8px;
+	background: #000000;
+	border: 1px solid #ffff00;
+	box-shadow: 0 0 10px rgba(255, 255, 0, 0.1);
+	margin: 20px 0;
+}
+
+.table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	color: #ffffff;
+	font-family: 'Arial', sans-serif;
+	background-color: #000000;
+}
+
+.table thead th {
+	background-color: #000000;
+	color: #ffff00;
+	text-transform: uppercase;
+	font-size: 14px;
+	padding: 15px;
+	letter-spacing: 1px;
+	border-bottom: 2px solid #ffff00;
+}
+
+.table tbody {
+	background-color: #000000;
+}
+
+.table tbody tr {
+	transition: background-color 0.2s ease;
+	background-color: #000000;
+}
+
+.table tbody tr:hover {
+	background-color: rgba(255, 255, 0, 0.05);
+}
+
+.table tbody tr:nth-child(even) {
+	background-color: #0a0a0a;
+}
+
+.table td {
+	padding: 15px;
+	vertical-align: middle;
+	border-bottom: 1px solid rgba(255, 255, 0, 0.2);
+	color: #ffffff;
+	background-color: transparent;
+}
+
+.table img {
+	border-radius: 50%;
+	transition: transform 0.2s ease;
+	border: 2px solid rgba(255, 255, 0, 0.5);
+	background-color: transparent;
+}
+
+.table img:hover {
+	transform: scale(1.1);
+	border-color: #ffff00;
+}
+
+.seller-name, .car-name, .valuer-name {
+	margin-left: 10px;
+	font-weight: 500;
+	color: #ffffff;
+}
+
+.price {
+	color: #00ff00;
+	font-weight: bold;
+	font-family: 'Courier New', monospace;
+}
+
+.actions {
+	white-space: nowrap;
+}
+
+.btn {
+	display: inline-block;
+	padding: 8px 15px;
+	margin: 2px;
+	border: 1px solid rgba(255, 255, 0, 0.3);
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: bold;
+	text-transform: uppercase;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	background-color: transparent;
+	color: #ffffff;
+}
+
+.btn-edit {
+	border-color: #2196f3;
+	color: #2196f3;
+}
+
+.btn-danger {
+	border-color: #ff4444;
+	color: #ff4444;
+}
+
+.btn-info {
+	border-color: #00bcd4;
+	color: #00bcd4;
+}
+
+.btn-success {
+	border-color: #4caf50;
+	color: #4caf50;
+}
+
+.btn:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+	box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.table tr th:first-child, .table tr td:first-child {
+	border-left: none;
+}
+
+.table tr th:last-child, .table tr td:last-child {
+	border-right: none;
+}
+
+.table tbody tr:last-child td {
+	border-bottom: 1px solid rgba(255, 255, 0, 0.2);
+}
+
+.table td:empty::before {
+	content: "—";
+	color: rgba(255, 255, 255, 0.3);
+}
+
+.table td:nth-child(3) {
+	font-family: 'Arial', sans-serif;
+	font-weight: 600;
+	color: #ffff00;
+}
+
+.table td:contains("Владелец") {
+	color: #ff00ff;
+	font-weight: 500;
+}
+
+.table .rounded-circle {
+	border: 2px solid #ff00ff;
+	box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+}
+
+.table .rounded-circle:hover {
+	border-color: #ff00ff;
+	box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+}
+
+.table img[alt="Владелец"] {
+	border: 2px solid #ffff00;
+	box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+}
+
+.table img[alt="Владелец"]:hover {
+	border-color: #ffff00;
+	box-shadow: 0 0 20px rgba(255, 255, 0, 0.6);
+}
