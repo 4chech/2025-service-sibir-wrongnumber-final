@@ -7,24 +7,26 @@
 {% endblock %}
 
 {% block content %}
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col">Оценка</th>
-            <th scope="col">Комментарий к оценке</th>
-            <th scope="col">Дата оценки </th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for review in reviews %}
-            {% if current_user.id == review.valuer_id %}
-                <tr scope="row">
-                    <td>{{ review.rating }}</td>
-                    <td>{{ review.comment }}</td>
-                    <td>{{ review.date }}</td>
-                </tr>
-            {% endif %}
-        {% endfor %}
-    </tbody>
-</table>
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Автомобиль</th>
+                <th scope="col">Оценка</th>
+                <th scope="col">Комментарий</th>
+                <th scope="col">Дата</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for review in reviews %}
+            <tr>
+                <td>{{ review.car_mark }}</td>
+                <td>{{ review.rating }}/10</td>
+                <td>{{ review.comment }}</td>
+                <td>{{ review.date.strftime('%d.%m.%Y %H:%M') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

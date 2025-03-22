@@ -1,20 +1,79 @@
 {% extends 'main/base.html' %}
 
-{% block title %} Редактирование объявления {{ post.car_mark }} {% endblock %}
+{% block title %}Редактирование публикации {{ post.car_mark }}{% endblock %}
 
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blocks/form.css') }}">
+{% endblock %}
 
 {% block content %}
-<form method = "post" class="form-control d-flex flex-column gap-2">
-    <input value="{{ post.car_mark }}" name = "car_mark" type = "text"  placeholder="Марка" class="form-control">
-    <input value="{{ post.price }}" name = "price" type = "text" placeholder="Цена" class="form-control">
-    {{ form.valuer }}
-    <input value="{{ post.description }}" name = "description" type = "text" placeholder="Измените описание вашего авто" class="form-control">
-    <input value="{{ post.speed }}" name = "speed" placeholder = "Скорость (км/ч)" type = "number" class = "form-control" > <!-- Класс потом спросить + тип -->
-    <input value="{{ post.handling }}" name = "handling" placeholder = "Управляемость(1-10)" type = "number" min="1" max="10" class = "form-control" >
-    <input value="{{ post.durability }}" name = "durability" placeholder = "Устойчивость(1-10)" type = "number" min="1" max="10" type = "text" class = "form-control" >
-    <input value="{{ post.fuel_consumption }}" name = "fuel_consumption" placeholder = "Расход топлива(л/100 км)" type = "number" class = "form-control" >
-    <input value="{{ post.seating_capacity }}" name = "seating_capacity" placeholder = "Количество мест" type = "number" min = "1" class = "form-control" >
-    <input value="{{ post.customizations }}" name = "customizations" placeholder = "Модификации" type = "text" class = "form-control" >
-    <input value = "Обновить" type = "submit" class ="btn btn-success">
-</form>
+<div class="car-details">
+    <div class="car-header">
+        <a href="{{ url_for('post.all') }}" class="back-button">← Назад к списку</a>
+        <h1>Редактирование публикации</h1>
+    </div>
+
+    <div class="car-content">
+        <div class="car-main">
+            <div class="car-info">
+                <form method="POST" enctype="multipart/form-data" id="updatePostForm">
+                    <div class="info-section">
+                        <h2>Основная информация</h2>
+                        <div class="info-grid">
+                            <div class="form-group">
+                                <label for="car_mark">Марка автомобиля</label>
+                                <input type="text" class="form-control" id="car_mark" name="car_mark" value="{{ post.car_mark }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="description">Описание</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" required>{{ post.description }}</textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="speed">Скорость (км/ч)</label>
+                                <input type="number" class="form-control" id="speed" name="speed" min="1" max="500" value="{{ post.speed }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="handling">Управляемость (1-10)</label>
+                                <input type="number" class="form-control" id="handling" name="handling" min="1" max="10" value="{{ post.handling }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="durability">Прочность (1-10)</label>
+                                <input type="number" class="form-control" id="durability" name="durability" min="1" max="10" value="{{ post.durability }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="fuel_consumption">Расход топлива (л/100км)</label>
+                                <input type="number" class="form-control" id="fuel_consumption" name="fuel_consumption" min="1" max="10" step="0.1" value="{{ post.fuel_consumption }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="seating_capacity">Количество мест</label>
+                                <input type="number" class="form-control" id="seating_capacity" name="seating_capacity" min="1" max="8" value="{{ post.seating_capacity }}" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="customizations">Модификации</label>
+                                <textarea class="form-control" id="customizations" name="customizations" rows="2" required>{{ post.customizations }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" onclick="this.disabled=true;this.form.submit();">Обновить публикацию</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 {% endblock %}

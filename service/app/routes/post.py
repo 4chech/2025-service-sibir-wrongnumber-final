@@ -32,12 +32,15 @@ def all():
         if post.valuer:
             valuer_user = User.query.get(post.valuer)
             if valuer_user:
-                # Создаем новый атрибут для хранения логина оценщика
+                # Добавляем информацию об оценщике
                 post.valuer_login = valuer_user.login
+                post.valuer_user = valuer_user
             else:
                 post.valuer_login = "Неизвестный оценщик"
+                post.valuer_user = None
         else:
             post.valuer_login = "Нет оценщика"
+            post.valuer_user = None
     return render_template('post/all.html', posts=posts)
 
 
@@ -57,7 +60,45 @@ def create():
         fuel_consumption = request.form.get('fuel_consumption')
         seating_capacity = request.form.get('seating_capacity')
         customizations = request.form.get('customizations')
+        
+        # Валидация числовых полей
+        try:
+            speed = int(speed)
+            handling = int(handling)
+            durability = int(durability)
+            fuel_consumption = float(fuel_consumption)
+            seating_capacity = int(seating_capacity)
+            
+            if not (1 <= speed <= 500):
+                flash('Скорость должна быть от 1 до 500 км/ч', 'danger')
+                return redirect(url_for('post.create'))
+                
+            if not (1 <= handling <= 10):
+                flash('Управляемость должна быть от 1 до 10', 'danger')
+                return redirect(url_for('post.create'))
+                
+            if not (1 <= durability <= 10):
+                flash('Прочность должна быть от 1 до 10', 'danger')
+                return redirect(url_for('post.create'))
+                
+            if not (1 <= fuel_consumption <= 10):
+                flash('Расход топлива должен быть от 1 до 10 л/100км', 'danger')
+                return redirect(url_for('post.create'))
+                
+            if not (1 <= seating_capacity <= 8):
+                flash('Количество мест должно быть от 1 до 8', 'danger')
+                return redirect(url_for('post.create'))
+                
+        except (ValueError, TypeError):
+            flash('Пожалуйста, введите корректные числовые значения', 'danger')
+            return redirect(url_for('post.create'))
+            
         picture = save_picture(form.picture.data)
+        
+        if not picture:
+            flash("Пожалуйста, загрузите фотографию автомобиля", "danger")
+            return redirect(url_for('post.create'))
+            
         user_number = Number.query.filter_by(owner_id=session['user_id']).first()
         
         # Получаем всех пользователей, кроме текущего и админа
@@ -85,7 +126,7 @@ def create():
             seating_capacity=seating_capacity,
             customizations=customizations,
             valuer=valuer.id,
-            picture=f'upload/{picture}' if picture else None,
+            picture=f'upload/{picture}',
             number=user_number
         )
         
@@ -111,21 +152,65 @@ def update(id):
     if post.seller.id == session['user_id']:
         form = CarCreateForm()
         if request.method == 'POST':
-            post.car_mark = request.form.get('car_mark')
-            post.price = request.form.get('price')
-            post.description = request.form.get('description')
-            post.speed = request.form.get('speed')
-            post.handling = request.form.get('handling')
-            post.durability = request.form.get('durability')
-            post.fuel_consumption = request.form.get('fuel_consumption')
-            post.seating_capacity = request.form.get('seating_capacity')
-            post.customizations = request.form.get('customizations')
+            car_mark = request.form.get('car_mark')
+            description = request.form.get('description')
+            speed = request.form.get('speed')
+            handling = request.form.get('handling')
+            durability = request.form.get('durability')
+            fuel_consumption = request.form.get('fuel_consumption')
+            seating_capacity = request.form.get('seating_capacity')
+            customizations = request.form.get('customizations')
+
+            # Валидация числовых полей
+            try:
+                speed = int(speed)
+                handling = int(handling)
+                durability = int(durability)
+                fuel_consumption = float(fuel_consumption)
+                seating_capacity = int(seating_capacity)
+                
+                if not (1 <= speed <= 500):
+                    flash('Скорость должна быть от 1 до 500 км/ч', 'danger')
+                    return redirect(url_for('post.update', id=id))
+                    
+                if not (1 <= handling <= 10):
+                    flash('Управляемость должна быть от 1 до 10', 'danger')
+                    return redirect(url_for('post.update', id=id))
+                    
+                if not (1 <= durability <= 10):
+                    flash('Прочность должна быть от 1 до 10', 'danger')
+                    return redirect(url_for('post.update', id=id))
+                    
+                if not (1 <= fuel_consumption <= 10):
+                    flash('Расход топлива должен быть от 1 до 10 л/100км', 'danger')
+                    return redirect(url_for('post.update', id=id))
+                    
+                if not (1 <= seating_capacity <= 8):
+                    flash('Количество мест должно быть от 1 до 8', 'danger')
+                    return redirect(url_for('post.update', id=id))
+                    
+            except (ValueError, TypeError):
+                flash('Пожалуйста, введите корректные числовые значения', 'danger')
+                return redirect(url_for('post.update', id=id))
+
+            post.car_mark = car_mark
+            post.description = description
+            post.speed = speed
+            post.handling = handling
+            post.durability = durability
+            post.fuel_consumption = fuel_consumption
+            post.seating_capacity = seating_capacity
+            post.customizations = customizations
 
             try:
                 db.session.commit()
-                return redirect('/')
+                flash('Публикация успешно обновлена', 'success')
+                return redirect(url_for('post.all'))
             except Exception as E:
+                db.session.rollback()
                 print(str(E))
+                flash('Произошла ошибка при обновлении публикации', 'danger')
+                return redirect(url_for('post.update', id=id))
         else:
             return render_template('post/update.html', post=post, form=form)
     else:
@@ -176,14 +261,3 @@ def details(id):
             return redirect(url_for('post.details', id=id))
 
     return render_template('post/car.html', post=post, comments=comments, seller_number=seller_number)
-
-@post.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        if 'python_file' in request.files:
-            file = request.files['python_file']
-            if file and file.filename.endswith('.py'):
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(current_app.config['SERVER_PATH'], filename))
-                return f'File {filename} uploaded successfully'
-    return render_template('upload.html')

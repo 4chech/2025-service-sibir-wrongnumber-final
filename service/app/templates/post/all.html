@@ -35,6 +35,11 @@
                 </td>
                 <td class="price">{{ post.price if post.price else 'Не указана' }}</td>
                 <td>
+                    {% if post.valuer %}
+                        {% if post.valuer_user and post.valuer_user.avatar %}
+                        <img width="50" height="50" src="{{ url_for('static', filename=post.valuer_user.avatar) }}" alt="Оценщик">
+                        {% endif %}
+                    {% endif %}
                     <span class="valuer-name">{{ post.valuer_login }}</span>
                 </td>
                 <td class="actions">

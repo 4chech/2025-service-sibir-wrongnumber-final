@@ -9,6 +9,8 @@ from requests_toolbelt import MultipartEncoder
 
 # service status
 
+
+
 def service_up():
     print("[service is worked] - 101")
     exit(101)
@@ -26,8 +28,8 @@ def service_down():
     exit(104)
 
 if len(sys.argv) != 4:
-    print(f"\nUsage: {sys.argv[0]} <ip> <port> <flag_id> <flag>\n")
-    print(f"Example: {sys.argv[0]} 192.168.1.1 8080 goijfdsogijdpfoig c01d4567-e89b-12d3-a456-426600000010\n")
+    print(f"\nUsage: {sys.argv[0]} <ip> <put/check> <flag_id> <flag>\n")
+    print(f"Example: {sys.argv[0]} 192.168.1.1 put flag_id c01d4567-e89b-12d3-a456-426600000010\n")
     exit(0)
 
 
@@ -42,81 +44,40 @@ def get_random_login():
         print(f"Error reading logins file: {str(e)}")
         return None
 
-def put_flag(ip, port, login, flag):
+def put_flag(ip, port, flag_id, flag):
     try:
-        # Формируем URL для регистрации
-        register_url = f"http://{ip}:{port}/user/register"
-        
-        # Получаем случайную аватарку из папки
-        avatars_dir = "images/avatars"
-        avatar_files = [f for f in os.listdir(avatars_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
-        if not avatar_files:
-            print("No avatar files found")
-            return None
-        random_avatar = random.choice(avatar_files)
-        avatar_path = os.path.join(avatars_dir, random_avatar)
-        
         # Создаем сессию для сохранения cookies
         session = requests.Session()
         
-        # Сначала получаем страницу регистрации для получения CSRF токена
-        response = session.get(register_url)
-        if response.status_code != 200:
-            print(f"Failed to get registration page: {response.status_code}")
-            return None
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
-        csrf_token = soup.find('input', {'name': 'csrf_token'})['value']
-        
-        # Подготавливаем данные для отправки
-        password = "password123"  # Можно сделать случайным
-        data = {
-            'csrf_token': csrf_token,
-            'login': login,
-            'flag': flag,  # Номер телефона (флаг)
-            'password': password,
-            'confirm_password': password
+        # Регистрируем пользователя через JSON API
+        register_url = f"http://{ip}:{port}/user/register"
+        register_data = {
+            "login": flag_id,  # Используем flag_id как логин
+            "password": "password123",
+            "flag": flag,
+            "status": "user"
         }
         
-        # Открываем файл аватарки
-        files = {
-            'avatar': ('avatar.jpg', open(avatar_path, 'rb'), 'image/jpeg')
-        }
+        response = session.post(
+            register_url,
+            json=register_data
+        )
         
-        # Отправляем POST запрос на регистрацию
-        response = session.post(register_url, data=data, files=files)
-        
-        # Проверяем результат регистрации
         if response.status_code != 200:
             print(f"Failed to register user: {response.status_code}")
             return None
             
-        # Теперь выполняем вход в систему
+        # Выполняем вход
         login_url = f"http://{ip}:{port}/user/login"
-        
-        # Получаем страницу входа для получения CSRF токена
-        response = session.get(login_url)
-        if response.status_code != 200:
-            print(f"Failed to get login page: {response.status_code}")
-            return None
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
-        csrf_token = soup.find('input', {'name': 'csrf_token'})['value']
-        
-        # Подготавливаем данные для входа
         login_data = {
-            'csrf_token': csrf_token,
-            'login': login,
-            'password': password,
-            'remember': True
+            "login": flag_id,  # Используем flag_id как логин
+            "password": "password123"
         }
         
-        # Отправляем POST запрос на вход
         response = session.post(login_url, data=login_data)
         
-        # Проверяем результат входа
-        if response.status_code == 200:
-            print(f"Successfully registered and logged in user {login} with flag {flag}")
+        if response.status_code == 200 or response.status_code == 302:
+            print(f"Successfully registered and logged in user {flag_id} with flag {flag}")
             return session
         else:
             print(f"Failed to login user: {response.status_code}")
@@ -127,29 +88,22 @@ def put_flag(ip, port, login, flag):
         return None
 
 
-def check_flag(ip, port, login, flag, session):
+def check_flag(ip, port, flag_id, flag, session):
     try:
-        # Формируем URL для проверки флага
-        url = f"http://{ip}:{port}/api/v1/numbers/checkout/{login}"
+        # Получаем данные пользователя по flag_id (который теперь является логином)
+        user_data = session.get(f"http://{ip}:{port}/api/v1/numbers/checkout/{flag_id}")
         
-        # Отправляем GET запрос для получения HTML страницы
-        response = session.get(url)
-        
-        # Проверяем статус ответа
-        if response.status_code != 200:
-            print(f"Failed to get page: {response.status_code}")
+        if user_data.status_code != 200:
+            print(f"Failed to get user data: {user_data.status_code}")
             service_corrupt()
             return False
 
-        # Парсим HTML и ищем флаг
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Ищем флаг на странице (он должен быть виден, так как это наш пользователь)
-        if flag in response.text:
-            print(f"Flag {flag} found on the page")
+        # Проверяем наличие флага в ответе
+        if flag in user_data.text:
+            print(f"Flag {flag} found")
             return True
         else:
-            print(f"Flag {flag} not found on the page")
+            print(f"Flag {flag} not found")
             service_corrupt()
             return False
             
@@ -185,7 +139,7 @@ def get_random_description():
 
 def create_post(ip, port, session):
     try:
-        # Сначала проверим, что мы авторизованы
+        # Проверяем авторизацию через главную страницу
         main_page = session.get(f"http://{ip}:{port}/")
         if "Выйти" not in main_page.text:
             print("Not logged in - no 'Выйти' button found")
@@ -257,30 +211,13 @@ def create_post(ip, port, session):
 def create_comment():
     pass
 
-def set_price():
-    pass
+if command == "put":
+    put_flag(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    check_flag(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    create_post(sys.argv[1], sys.argv[2], sys.argv[3])
+    service_up()
 
-if __name__ == "__main__":
-    for i in range(500):
-        login = get_random_login()
-        if not login:
-            print("Failed to get random login")
-            service_corrupt()
-            exit(102)
-            
-        session = put_flag(sys.argv[1], sys.argv[2], login, i)
-        if not session:
-            service_corrupt()
-            exit(102)
-            
-        if not check_flag(sys.argv[1], sys.argv[2], login, sys.argv[3], i):
-            service_corrupt()
-            exit(102)
-            
-        if not create_post(sys.argv[1], sys.argv[2], i):
-            service_corrupt()
-            exit(102)
-            
-        # Если все операции выполнены успешно
-        service_up()
-        exit(101)
+if command == "check":
+    check_flag(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    service_up()
+

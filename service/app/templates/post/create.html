@@ -32,7 +32,7 @@
                             
                             <div class="form-group">
                                 <label for="speed">Скорость (км/ч)</label>
-                                <input type="number" class="form-control" id="speed" name="speed" required>
+                                <input type="number" class="form-control" id="speed" name="speed" min="1" max="500" required>
                             </div>
                             
                             <div class="form-group">
@@ -47,17 +47,17 @@
                             
                             <div class="form-group">
                                 <label for="fuel_consumption">Расход топлива (л/100км)</label>
-                                <input type="number" class="form-control" id="fuel_consumption" name="fuel_consumption" step="0.1" required>
+                                <input type="number" class="form-control" id="fuel_consumption" name="fuel_consumption" min="1" max="10" step="0.1" required>
                             </div>
                             
                             <div class="form-group">
                                 <label for="seating_capacity">Количество мест</label>
-                                <input type="number" class="form-control" id="seating_capacity" name="seating_capacity" required>
+                                <input type="number" class="form-control" id="seating_capacity" name="seating_capacity" min="1" max="8" required>
                             </div>
                             
                             <div class="form-group">
                                 <label for="customizations">Модификации</label>
-                                <textarea class="form-control" id="customizations" name="customizations" rows="2"></textarea>
+                                <textarea class="form-control" id="customizations" name="customizations" rows="2" required></textarea>
                             </div>
                             
                             <div class="form-group">

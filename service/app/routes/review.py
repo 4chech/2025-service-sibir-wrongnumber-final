@@ -20,22 +20,33 @@ def create_review(post_id):
         return redirect(url_for('post.details', id=post_id))
 
     if request.method == 'POST':
+        rating = request.form.get('rating')
         comment = request.form.get('comment')
         
-        if comment:
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 10:
+                flash('Оценка должна быть от 1 до 10', 'danger')
+                return redirect(url_for('review.create_review', post_id=post_id))
+        except (ValueError, TypeError):
+            flash('Оценка должна быть числом от 1 до 10', 'danger')
+            return redirect(url_for('review.create_review', post_id=post_id))
+        
+        if rating and comment:
             review = Review(
                 post_id=post_id,
                 valuer_id=session['user_id'],
+                rating=rating,
                 comment=comment
             )
             
             try:
                 db.session.add(review)
                 db.session.commit()
-                flash('Отзыв успешно добавлен', 'success')
+                flash('Оценка успешно добавлена', 'success')
             except Exception as e:
                 db.session.rollback()
-                flash('Произошла ошибка при добавлении отзыва', 'danger')
+                flash('Произошла ошибка при добавлении оценки', 'danger')
                 print(str(e))
         
         return redirect(url_for('post.details', id=post_id))
@@ -45,6 +56,11 @@ def create_review(post_id):
 
 @review.route('/review/my_reviews', methods = ['GET'])
 def my_reviews():
-    reviews = Review.query.all()  # делаем запрос в базу данных и дёргаем все записи из неё
-    return render_template('review/my_reviews.html', reviews=reviews) # передаём reviews в render_template
+    reviews = db.session.query(
+        Review.rating,
+        Review.comment,
+        Review.date,
+        Post.car_mark
+    ).join(Post, Review.post_id == Post.id).filter(Review.valuer_id == session['user_id']).all()
+    return render_template('review/my_reviews.html', reviews=reviews)
 
