@@ -1,7 +1,4 @@
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed
-from sqlalchemy import Boolean
-from wtforms import StringField, PasswordField, SubmitField, FileField
+from wtforms import Form, StringField, PasswordField, SubmitField, FileField
 from wtforms.fields.choices import SelectField
 from wtforms.fields.simple import BooleanField, HiddenField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
@@ -12,7 +9,7 @@ from .models.user import User
 
 
 # Валидаторы вообще убрать можно - уязвимость. Надо прочитать про них. В идеале вообще удалить все валидаторы. Чтобы инъекции были и т.д.
-class RegistrationForm(FlaskForm):
+class RegistrationForm(Form):
     login = StringField('Логин', validators=[DataRequired(), Length(min=2, max=20)], render_kw={
         'class':'form-control',
         'placeholder': 'Логин'
@@ -30,7 +27,7 @@ class RegistrationForm(FlaskForm):
             raise ValidationError("Данное имя уже занято. Пожалуйста выберите другое...")
 
 
-class LoginForm(FlaskForm):
+class LoginForm(Form):
     login = StringField('Логин', validators=[DataRequired(), Length(min=2, max=20)], render_kw =
     {
         'class':'form-control',
@@ -51,11 +48,11 @@ class LoginForm(FlaskForm):
     })
 
 
-class CarCreateForm(FlaskForm):
+class CarCreateForm(Form):
     picture = FileField('Загрузите своё фото', validators=[DataRequired()]) # тут мы ставив валидаторы, чтобы нам случайно чего опасного не закинули - в целом уяза для CTF-ки
 
 
-class ReviewForm(FlaskForm):
+class ReviewForm(Form):
     rating = StringField('Оценка', validators=[DataRequired(), Length(min=2, max =10)],render_kw=
     {
         'class':'form-control',

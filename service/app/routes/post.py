@@ -96,7 +96,7 @@ def create():
         picture = save_picture(form.picture.data)
         
         if not picture:
-            flash("Пожалуйста, загрузите фотографию автомобиля", "danger")
+            flash("Пожалуйста, загрузите изображение в формате JPG, JPEG или PNG", "danger")
             return redirect(url_for('post.create'))
             
         user_number = Number.query.filter_by(owner_id=session['user_id']).first()
