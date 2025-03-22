@@ -79,7 +79,7 @@ def put_flag(ip, port, flag_id, flag):
             return None
             
         # Логин
-        login_url = f"http://{ip}:{port}/user/login"
+        login_url = f"http://{ip}:{port}/login"
         print(f"\n[DEBUG] Starting login process:")
         print(f"[DEBUG] Login URL: {login_url}")
         
@@ -116,21 +116,6 @@ def put_flag(ip, port, flag_id, flag):
             service_corrupt()
             return None
 
-        # Выход из системы
-        logout_url = f"http://{ip}:{port}/user/logout"
-        print(f"\n[DEBUG] Logging out:")
-        print(f"[DEBUG] Logout URL: {logout_url}")
-        
-        print("[DEBUG] Sending logout request...")
-        logout_response = session.get(logout_url)
-        print(f"[DEBUG] Response status code: {logout_response.status_code}")
-        
-        if logout_response.status_code != 200 and logout_response.status_code != 302:
-            print("[ERROR] Failed to logout")
-            print(f"[ERROR] Response content: {logout_response.text}")
-            service_corrupt()
-            return None
-
         print(f"\n[SUCCESS] Successfully registered user {flag_id} with flag {flag}")
         return session
 
@@ -149,7 +134,7 @@ def check_flag(ip, port, flag_id, flag):
         password = generate_password(flag_id)
 
         # Логин
-        login_url = f"http://{ip}:{port}/user/login"
+        login_url = f"http://{ip}:{port}/login"
         login_data = {
             "login": flag_id,
             "password": password
@@ -169,7 +154,7 @@ def check_flag(ip, port, flag_id, flag):
             return False
 
         # Проверка видимости flag_id на странице всех постов
-        posts_response = session.get(f"http://{ip}:{port}/post/all")
+        posts_response = session.get(f"http://{ip}:{port}/")
         if posts_response.status_code != 200:
             print("Failed to get posts page")
             service_corrupt()
@@ -189,7 +174,7 @@ def check_flag(ip, port, flag_id, flag):
             return False
 
         # Выход из системы
-        logout_response = session.get(f"http://{ip}:{port}/user/logout")
+        logout_response = session.get(f"http://{ip}:{port}/logout")
         if logout_response.status_code != 200 and logout_response.status_code != 302:
             print("Failed to logout during check")
             service_corrupt()
@@ -302,6 +287,26 @@ def create_post(ip, port, session):
 def create_comment():
     pass
 
+def logout(ip, port, session):
+    try:
+        logout_url = f"http://{ip}:{port}/logout"
+        print(f"\n[DEBUG] Logging out:")
+        print(f"[DEBUG] Logout URL: {logout_url}")
+        
+        print("[DEBUG] Sending logout request...")
+        logout_response = session.get(logout_url)
+        print(f"[DEBUG] Response status code: {logout_response.status_code}")
+        
+        if logout_response.status_code != 200 and logout_response.status_code != 302:
+            print("[ERROR] Failed to logout")
+            print(f"[ERROR] Response content: {logout_response.text}")
+            service_corrupt()
+            return False
+        return True
+    except Exception as e:
+        print(f"Error during logout: {str(e)}")
+        service_down()
+        return False
 
 if __name__ == "__main__":
     if len(sys.argv) != 6:
@@ -320,7 +325,10 @@ if __name__ == "__main__":
             session = put_flag(ip, port, flag_id, flag)
             if session is None:
                 service_corrupt()
-            create_post(ip, port, session)
+            if not create_post(ip, port, session):
+                service_corrupt()
+            if not logout(ip, port, session):
+                service_corrupt()
             service_up()
         
         elif method == "check":

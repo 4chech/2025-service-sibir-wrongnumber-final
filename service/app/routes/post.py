@@ -93,9 +93,14 @@ def create():
             flash('Пожалуйста, введите корректные числовые значения', 'danger')
             return redirect(url_for('post.create'))
             
-        picture = save_picture(form.picture.data)
-        
+        # Получаем файл из request.files вместо form.picture.data
+        picture = request.files.get('picture')
         if not picture:
+            flash("Пожалуйста, загрузите изображение", "danger")
+            return redirect(url_for('post.create'))
+            
+        picture_filename = save_picture(picture)
+        if not picture_filename:
             flash("Пожалуйста, загрузите изображение в формате JPG, JPEG или PNG", "danger")
             return redirect(url_for('post.create'))
             
@@ -126,7 +131,7 @@ def create():
             seating_capacity=seating_capacity,
             customizations=customizations,
             valuer=valuer.id,
-            picture=f'upload/{picture}',
+            picture=f'upload/{picture_filename}',
             number=user_number
         )
         
