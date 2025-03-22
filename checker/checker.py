@@ -48,79 +48,131 @@ def put_flag(ip, port, flag_id, flag):
         session = requests.Session()
         password = generate_password(flag_id)
         
-        print(f"\n[DEBUG] Starting registration process:")
-        print(f"[DEBUG] IP: {ip}")
-        print(f"[DEBUG] Port: {port}")
-        print(f"[DEBUG] Flag ID: {flag_id}")
-        print(f"[DEBUG] Generated password: {password}")
+        print(f"\n[DEBUG] Login: {flag_id}")
+        print(f"[DEBUG] Password: {password}")
         
-        # Регистрация пользователя
+        # Проверяем наличие директории с аватарками
+        if not os.path.exists("images/avatars"):
+            print("[ERROR] Directory images/avatars not found")
+            service_corrupt()
+            return None
+
+        avatar_files = [f for f in os.listdir("images/avatars") if f.endswith(('.jpg', '.png', '.jpeg'))]
+        if not avatar_files:
+            print("[ERROR] No avatar images found")
+            service_corrupt()
+            return None
+
+        random_avatar = random.choice(avatar_files)
+        avatar_path = os.path.join("images/avatars", random_avatar)
+        
+        # Регистрация пользователя через форму
         register_url = f"http://{ip}:{port}/register"
         print(f"[DEBUG] Register URL: {register_url}")
         
-        register_data = {
-            "login": flag_id,
-            "password": password,
-            "flag": flag,
-            "status": "user"
-        }
-        print(f"[DEBUG] Register data: {register_data}")
+        # Открываем файл аватарки и готовим данные формы
+        with open(avatar_path, 'rb') as avatar_file:
+            files = {
+                'avatar': (random_avatar, avatar_file, 'image/jpeg')
+            }
+            data = {
+                'login': flag_id,
+                'password': password,
+                'confirm_password': password,
+                'flag': flag
+            }
+            
+            print("[DEBUG] Sending registration request...")
+            response = session.post(
+                register_url,
+                data=data,
+                files=files
+            )
+            print(f"[DEBUG] Register response: {response.status_code}")
+            print(f"[DEBUG] Register content: {response.text[:500]}...")
+            
+            # Проверяем, есть ли в ответе сообщение об ошибке
+            if "Этот логин уже занят" in response.text:
+                print("[ERROR] Login already exists")
+                service_corrupt()
+                return None
+            if "Пароли не совпадают" in response.text:
+                print("[ERROR] Passwords do not match")
+                service_corrupt()
+                return None
+            if "Произошла ошибка при регистрации" in response.text:
+                print("[ERROR] Registration error occurred")
+                service_corrupt()
+                return None
         
-        print("[DEBUG] Sending registration request...")
-        response = session.post(register_url, json=register_data)
-        print(f"[DEBUG] Response status code: {response.status_code}")
-        print(f"[DEBUG] Response headers: {response.headers}")
-        print(f"[DEBUG] Response content: {response.text[:500]}...")  # Выводим только первые 500 символов
-        
-        if response.status_code != 200:
-            print(f"[ERROR] Failed to register user: {response.status_code}")
-            print(f"[ERROR] Response content: {response.text}")
+        if response.status_code != 200 and response.status_code != 302:
+            print("[ERROR] Registration failed")
             service_corrupt()
             return None
             
-        # Логин
+        # Логин через форму
         login_url = f"http://{ip}:{port}/login"
-        print(f"\n[DEBUG] Starting login process:")
         print(f"[DEBUG] Login URL: {login_url}")
         
         login_data = {
-            "login": flag_id,
-            "password": password
+            'login': flag_id,
+            'password': password
         }
         print(f"[DEBUG] Login data: {login_data}")
         
         print("[DEBUG] Sending login request...")
         response = session.post(login_url, data=login_data)
-        print(f"[DEBUG] Response status code: {response.status_code}")
-        print(f"[DEBUG] Response headers: {response.headers}")
+        print(f"[DEBUG] Login response: {response.status_code}")
+        print(f"[DEBUG] Login content: {response.text[:500]}...")
         
         if response.status_code != 200 and response.status_code != 302:
-            print(f"[ERROR] Failed to login: {response.status_code}")
-            print(f"[ERROR] Response content: {response.text}")
+            print("[ERROR] Login failed")
             service_corrupt()
             return None
 
-        # Проверка флага через API
+        # Проверяем успешность логина
+        main_page = session.get(f"http://{ip}:{port}/")
+        print(f"[DEBUG] Main page response: {main_page.status_code}")
+        print(f"[DEBUG] Main page content: {main_page.text[:500]}...")
+        
+        if "Выйти" not in main_page.text:
+            print("[ERROR] Login verification failed")
+            service_corrupt()
+            return None
+
+        # Проверка флага на странице информации о номере
         check_url = f"http://{ip}:{port}/api/v1/numbers/checkout/{flag_id}"
-        print(f"\n[DEBUG] Checking flag visibility:")
-        print(f"[DEBUG] Check URL: {check_url}")
+        print(f"[DEBUG] Check flag URL: {check_url}")
         
-        print("[DEBUG] Sending check request...")
         check_response = session.get(check_url)
-        print(f"[DEBUG] Response status code: {check_response.status_code}")
-        print(f"[DEBUG] Response content: {check_response.text[:500]}...")
+        print(f"[DEBUG] Check flag response: {check_response.status_code}")
+        print(f"[DEBUG] Check flag content: {check_response.text[:500]}...")
         
-        if check_response.status_code != 200 or flag not in check_response.text:
-            print("[ERROR] Failed to verify flag after registration")
-            print(f"[ERROR] Flag not found in response: {flag}")
+        if check_response.status_code != 200:
+            print("[ERROR] Failed to get flag page")
             service_corrupt()
             return None
 
-        print(f"\n[SUCCESS] Successfully registered user {flag_id} with flag {flag}")
+        # Парсим HTML страницу для поиска флага
+        soup = BeautifulSoup(check_response.text, 'html.parser')
+        # Ищем span с флагом после strong с текстом "Флаг:"
+        flag_label = soup.find('strong', string='Флаг:')
+        if not flag_label:
+            print("[ERROR] Flag label not found on page")
+            service_corrupt()
+            return None
+            
+        flag_span = flag_label.find_next('span')
+        if not flag_span or flag not in flag_span.text:
+            print("[ERROR] Flag not found on page")
+            service_corrupt()
+            return None
+
+        print("[SUCCESS] Registration and flag verification completed")
         return session
 
     except Exception as e:
-        print(f"\n[ERROR] Error during put_flag: {str(e)}")
+        print(f"[ERROR] Unexpected error: {str(e)}")
         print(f"[ERROR] Exception type: {type(e)}")
         import traceback
         print(f"[ERROR] Traceback: {traceback.format_exc()}")
@@ -133,58 +185,86 @@ def check_flag(ip, port, flag_id, flag):
         session = requests.Session()
         password = generate_password(flag_id)
 
-        # Логин
+        print(f"\n[DEBUG] Login: {flag_id}")
+        print(f"[DEBUG] Password: {password}")
+
+        # Логин через форму
         login_url = f"http://{ip}:{port}/login"
         login_data = {
-            "login": flag_id,
-            "password": password
+            'login': flag_id,
+            'password': password
         }
         
         response = session.post(login_url, data=login_data)
+        print(f"[DEBUG] Login response: {response.status_code}")
+        print(f"[DEBUG] Login content: {response.text[:500]}...")
+        
         if response.status_code != 200 and response.status_code != 302:
-            print(f"Failed to login during check: {response.status_code}")
+            print("[ERROR] Login failed")
             service_corrupt()
             return False
 
-        # Проверка видимости флага в API
-        api_response = session.get(f"http://{ip}:{port}/api/v1/numbers/checkout/{flag_id}")
-        if api_response.status_code != 200 or flag not in api_response.text:
-            print("Flag not found in API")
+        # Проверяем успешность логина
+        main_page = session.get(f"http://{ip}:{port}/")
+        if "Выйти" not in main_page.text:
+            print("[ERROR] Login verification failed")
+            service_corrupt()
+            return False
+
+        # Проверка флага на странице информации о номере
+        check_url = f"http://{ip}:{port}/api/v1/numbers/checkout/{flag_id}"
+        api_response = session.get(check_url)
+        print(f"[DEBUG] Check flag response: {api_response.status_code}")
+        print(f"[DEBUG] Check flag content: {api_response.text[:500]}...")
+        
+        if api_response.status_code != 200:
+            print("[ERROR] Failed to get flag page")
+            service_corrupt()
+            return False
+
+        # Парсим HTML страницу для поиска флага
+        soup = BeautifulSoup(api_response.text, 'html.parser')
+        # Ищем span с флагом после strong с текстом "Флаг:"
+        flag_label = soup.find('strong', string='Флаг:')
+        if not flag_label:
+            print("[ERROR] Flag label not found on page")
+            service_corrupt()
+            return False
+            
+        flag_span = flag_label.find_next('span')
+        if not flag_span or flag not in flag_span.text:
+            print("[ERROR] Flag not found on page")
             service_corrupt()
             return False
 
         # Проверка видимости flag_id на странице всех постов
         posts_response = session.get(f"http://{ip}:{port}/")
+        print(f"[DEBUG] Posts page response: {posts_response.status_code}")
+        
         if posts_response.status_code != 200:
-            print("Failed to get posts page")
+            print("[ERROR] Failed to get posts page")
             service_corrupt()
             return False
 
-        soup = BeautifulSoup(posts_response.text, 'html.parser')
         if flag_id not in posts_response.text:
-            print("Flag ID not visible on posts page")
-            service_corrupt()
-            return False
-
-        # Проверка видимости flag_id в API numbers
-        numbers_response = session.get(f"http://{ip}:{port}/api/v1/numbers")
-        if numbers_response.status_code != 200 or flag_id not in numbers_response.text:
-            print("Flag ID not found in numbers API")
+            print("[ERROR] Flag ID not visible on posts page")
             service_corrupt()
             return False
 
         # Выход из системы
         logout_response = session.get(f"http://{ip}:{port}/logout")
+        print(f"[DEBUG] Logout response: {logout_response.status_code}")
+        
         if logout_response.status_code != 200 and logout_response.status_code != 302:
-            print("Failed to logout during check")
+            print("[ERROR] Logout failed")
             service_corrupt()
             return False
 
-        print(f"Successfully checked flag {flag} and flag_id visibility")
+        print("[SUCCESS] Flag check completed successfully")
         return True
 
     except Exception as e:
-        print(f"Error during check_flag: {str(e)}")
+        print(f"[ERROR] Unexpected error: {str(e)}")
         service_down()
         return False
 
