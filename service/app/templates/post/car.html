@@ -1,79 +1,131 @@
 {% extends 'main/base.html' %}
 
-{% block title %} Описание автомобиля {% endblock %}
+{% block title %}{{ post.car_mark }}{% endblock %}
 
 {% block style %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/blocks/details.css') }}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blocks/car.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="back-button">
-    <a href="{{ url_for('post.all') }}" class="btn">
-        <i class="bi bi-arrow-left"></i>
-        Вернуться к списку
-    </a>
-</div>
+<div class="car-details">
+    <div class="car-header">
+        <a href="{{ url_for('post.all') }}" class="back-button">← Назад к списку</a>
+        <h1>{{ post.car_mark }}</h1>
+    </div>
 
-<div class="car">
-    <div class="card">
-        <div class="card-header">
-            <h1 class="card-title">{{ post.car_mark }}</h1>
+    <div class="car-content">
+        <div class="car-main">
+            {% if post.picture %}
+            <div class="car-image">
+                <img src="{{ url_for('static', filename=post.picture) }}" alt="{{ post.car_mark }}">
+            </div>
+            {% endif %}
+
+            <div class="car-info">
+                <div class="info-section">
+                    <h2>Основная информация</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Цена:</span>
+                            <span class="value">{{ post.price }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Скорость:</span>
+                            <span class="value">{{ post.speed }} км/ч</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Управляемость:</span>
+                            <span class="value">{{ post.handling }}/10</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Прочность:</span>
+                            <span class="value">{{ post.durability }}/10</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Расход топлива:</span>
+                            <span class="value">{{ post.fuel_consumption }} л/100км</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Вместимость:</span>
+                            <span class="value">{{ post.seating_capacity }} мест</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if post.customizations %}
+                <div class="info-section">
+                    <h2>Модификации</h2>
+                    <p>{{ post.customizations }}</p>
+                </div>
+                {% endif %}
+
+                {% if post.description %}
+                <div class="info-section">
+                    <h2>Описание</h2>
+                    <p>{{ post.description }}</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        <div class="card-body">
-            <div class="mb-3">
-                <h5 class="card-subtitle">Владелец автомобиля: {{ post.owner }}</h5>
-                <h6 class="card-subtitle">Номер телефона: {{ post.number.phone_number }}</h6>
-                <img src="{{ url_for('static', filename='upload/' + post.picture) }}" alt="Автомобиль" class="img-thumbnail">
+
+        <div class="seller-section">
+            <h2>Информация о продавце</h2>
+            <div class="seller-info">
+                {% if post.seller.avatar %}
+                <img src="{{ url_for('static', filename=post.seller.avatar) }}" alt="Продавец" class="seller-avatar">
+                {% endif %}
+                <div class="seller-details">
+                    <p><strong>Имя:</strong> {{ post.seller.login }}</p>
+                    {% if seller_number %}
+                    <p><strong>Телефон:</strong> {{ seller_number.phone_number }}</p>
+                    {% endif %}
+                </div>
             </div>
-            
-            <div class="mb-2">
-                <strong>Цена автомобиля:</strong> 
-                <span class="price">{{ post.price if post.price else 'Не указана' }}</span>
+        </div>
+
+        {% if session.user_id == post.valuer %}
+        <div class="valuer-section">
+            <h2>Оценка автомобиля</h2>
+            <form method="POST" class="price-form">
+                <div class="form-group">
+                    <label for="new_price">Новая цена:</label>
+                    <input type="text" id="new_price" name="new_price" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Обновить цену</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="comments-section">
+            <h2>Комментарии</h2>
+            {% if session.user_id %}
+            <form method="POST" class="comment-form">
+                <div class="form-group">
+                    <label for="comment">Оставить комментарий:</label>
+                    <textarea id="comment" name="comment" class="form-control" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Отправить</button>
+            </form>
+            {% endif %}
+
+            <div class="comments-list">
+                {% if comments %}
+                    {% for comment in comments %}
+                    <div class="comment">
+                        <div class="comment-header">
+                            <span class="comment-author">{{ comment.valuer_login }}</span>
+                            <span class="comment-date">{{ comment.date.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </div>
+                        <div class="comment-body">
+                            {{ comment.comment }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-comments">Комментариев пока нет</p>
+                {% endif %}
             </div>
-            
-            <div class="mb-3">
-                <strong>Описание:</strong>
-                <p>{{ post.description }}</p>
-            </div>
-            
-            <ul class="list-group">
-                <li class="list-group-item"><strong>Максимальная скорость:</strong> {{ post.speed }} км/ч</li>
-                <li class="list-group-item"><strong>Управляемость:</strong> {{ post.handling }}/10</li>
-                <li class="list-group-item"><strong>Устойчивость:</strong> {{ post.durability }}/10</li>
-                <li class="list-group-item"><strong>Расход топлива:</strong> {{ post.fuel_consumption }} л/100 км</li>
-                <li class="list-group-item"><strong>Количество мест:</strong> {{ post.seating_capacity }}</li>
-                <li class="list-group-item"><strong>Модификации:</strong> {{ post.customizations }}</li>
-            </ul>
         </div>
     </div>
 </div>
-
-<h2>Комментарии</h2>
-<div class="comments-section">
-    {% for comment in comments %}
-    <div class="comment">
-        <strong>{{ comment.valuer_login }}</strong>
-        <p class="mb-1">{{ comment.comment }}</p>
-        <small class="text-muted">{{ comment.date }}</small>
-    </div>
-    {% endfor %}
-</div>
-
-{% if current_user.is_authenticated and current_user.id == post.valuer %}
-<form method="post" enctype="multipart/form-data" class="car">
-    <h2>Оценка автомобиля</h2>
-    <h3>Измените цену автомобиля, если считаете нужным</h3>
-    <input value="{{ post.price }}" name="new_price" type="text" placeholder="Новая цена" class="form-control">
-    <button type="submit" class="btn btn-primary">Обновить цену</button>
-</form>
-{% endif %}
-
-{% if current_user.is_authenticated %}
-<form method="post" enctype="multipart/form-data" class="car">
-    <h3>Комментарий к записи</h3>
-    <input name="comment" type="text" placeholder="Комментарий" class="form-control">
-    <button type="submit" class="btn btn-primary">Комментировать</button>
-</form>
-{% endif %}
 {% endblock %}

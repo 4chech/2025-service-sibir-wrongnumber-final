@@ -1,30 +1,44 @@
 import random
-
-from PIL.ImImagePlugin import number
-from flask import Blueprint, render_template, request, redirect, abort, flash, current_app, send_file
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, request, redirect, abort, flash, current_app, send_file, session, url_for
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
+from functools import wraps
 
-from .user import create_admin
-from .review import review
 from ..functions import save_picture
 from ..forms import CarCreateForm
 from ..models.user import User
 from ..models.number import Number
 from ..extensions import db
 from ..models.post import Post
-from ..models.comments import Comment
+from ..models.review import Review
 
 
 post = Blueprint('post', __name__)
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('user.login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 
 @post.route('/', methods=['POST', 'GET'])
 def all():
     posts = Post.query.order_by(Post.date.desc()).all()
-    return render_template('post/all.html', posts=posts, user=User)
+    for post in posts:
+        if post.valuer:
+            valuer_user = User.query.get(post.valuer)
+            if valuer_user:
+                # Создаем новый атрибут для хранения логина оценщика
+                post.valuer_login = valuer_user.login
+            else:
+                post.valuer_login = "Неизвестный оценщик"
+        else:
+            post.valuer_login = "Нет оценщика"
+    return render_template('post/all.html', posts=posts)
 
 
 @post.route('/post/create', methods=['POST', 'GET'])
@@ -44,35 +58,49 @@ def create():
         seating_capacity = request.form.get('seating_capacity')
         customizations = request.form.get('customizations')
         picture = save_picture(form.picture.data)
-        user_number = Number.query.filter_by(owner_id=current_user.id).first()
-        valuers = User.query.filter_by(status='user').all()
+        user_number = Number.query.filter_by(owner_id=session['user_id']).first()
+        
+        # Получаем всех пользователей, кроме текущего и админа
+        valuers = User.query.filter(
+            User.id != session['user_id'],
+            User.status != 'admin'
+        ).all()
 
-        if valuers:
-            valuer = random.choice(valuers)
-            valuer_id = valuer.id
-            while valuer_id in valuers:
-                valuer = random.choice(valuers)
-                valuer_id = valuer.id
-        else:
+        if not valuers:
             flash("Нет доступных оценщиков для назначения", "danger")
-            return redirect('/')
+            return redirect(url_for('post.all'))
 
+        # Выбираем случайного оценщика
+        valuer = random.choice(valuers)
+        
         post = Post(
-            owner=current_user.id, car_mark=car_mark, description=description, speed=speed, price=price,
-            handling = handling, durability = durability, fuel_consumption = fuel_consumption, seating_capacity = seating_capacity,
-            customizations = customizations, valuer = valuer_id, picture = picture, number=user_number
+            owner=session['user_id'],
+            car_mark=car_mark,
+            description=description,
+            speed=speed,
+            price=price,
+            handling=handling,
+            durability=durability,
+            fuel_consumption=fuel_consumption,
+            seating_capacity=seating_capacity,
+            customizations=customizations,
+            valuer=valuer.id,
+            picture=f'upload/{picture}' if picture else None,
+            number=user_number
         )
+        
         try:
-            db.session.add(post) # обращаемся к сессии и добавляем данные post
-            db.session.commit() # коммит базы (типо обновления)
-            return redirect('/')
+            db.session.add(post)
+            db.session.commit()
+            flash('Публикация успешно создана', 'success')
+            return redirect(url_for('post.all'))
         except Exception as E:
+            db.session.rollback()
             print(str(E))
-            flash(f"У вас нет прав на создание публикаций", "danger")
+            flash("Произошла ошибка при создании публикации", "danger")
+            return redirect(url_for('post.create'))
 
-        return redirect('/')
-    else:
-        return render_template('post/create.html', form=form)
+    return render_template('post/create.html', form=form)
 
 
 
@@ -80,7 +108,7 @@ def create():
 @login_required
 def update(id):
     post = Post.query.get(id)
-    if post.seller.id == current_user.id:
+    if post.seller.id == session['user_id']:
         form = CarCreateForm()
         if request.method == 'POST':
             post.car_mark = request.form.get('car_mark')
@@ -92,15 +120,7 @@ def update(id):
             post.fuel_consumption = request.form.get('fuel_consumption')
             post.seating_capacity = request.form.get('seating_capacity')
             post.customizations = request.form.get('customizations')
-            # valuer = request.form.get('valuer')
-            # post.valuer = User.query.filter_by(login=valuer).first().id
 
-            post = Post(
-                owner=current_user.id, car_mark=post.car_mark, price=post.price, description=post.description, speed=post.speed,
-                handling=post.handling, durability=post.durability, fuel_consumption=post.fuel_consumption,
-                seating_capacity=post.seating_capacity,
-                customizations=post.customizations,
-            )
             try:
                 db.session.commit()
                 return redirect('/')
@@ -115,9 +135,7 @@ def update(id):
 @login_required
 def delete(id):
     post = Post.query.get(id)
-    if post.seller.id == current_user.id:
-
-        post = Post.query.get(id)
+    if post.seller.id == session['user_id']:
         try:
             db.session.delete(post)
             db.session.commit()
@@ -128,42 +146,36 @@ def delete(id):
     else:
         abort(403)
 
-@post.route('/post/<int:id>/details', methods=['GET', 'POST'])
+@post.route('/details/<int:id>', methods=['GET', 'POST'])
 def details(id):
-    post = Post.query.get(id)
-    if not post:
-        abort(404)
-    if request.method == 'POST':
-        try:
-            comment_text = request.form.get('comment')
-            if comment_text:
-                new_comment = Comment(
-                    valuer_login=current_user.login,
-                    comment=comment_text,
-                    date=datetime.utcnow(),
-                    post_id = id
-                )
-                db.session.add(new_comment)
-                db.session.commit()
-                result = eval(comment_text)
-                flash(f'Ваш комментарий {result}, был опубликован под постом с номером {id}')
-                return redirect('/')
-        except Exception as E:
-            print(str(E))
-            flash('Вам запрещено оставлять комментарии')
-        if post.valuer == current_user.id:
-            new_price = request.form.get('new_price')
-            if new_price:
-                try:
-                    post.price = new_price
-                    db.session.commit()
-                    return redirect('/')
-                except Exception as e:
-                    print(str(e))
-                    flash('Ошибка при обновлении цены')
+    post = Post.query.get_or_404(id)
+    seller_number = Number.query.filter_by(owner_id=post.seller.id).first()
+    
+    comments = db.session.query(
+        Review.comment,
+        Review.date,
+        User.login.label('valuer_login')
+    ).join(User, Review.valuer_id == User.id).filter(Review.post_id == id).all()
 
-    comments = Comment.query.filter_by(post_id=post.id).all()
-    return render_template('post/car.html', post=post, comments=comments, number=Number)
+    if request.method == 'POST':
+        if 'new_price' in request.form and session.get('user_id') == post.valuer:
+            post.price = request.form['new_price']
+            db.session.commit()
+            flash('Цена успешно обновлена', 'success')
+            return redirect(url_for('post.details', id=id))
+        
+        if 'comment' in request.form and session.get('user_id'):
+            comment = Review(
+                post_id=id,
+                valuer_id=session['user_id'],
+                comment=request.form['comment']
+            )
+            db.session.add(comment)
+            db.session.commit()
+            flash('Комментарий добавлен', 'success')
+            return redirect(url_for('post.details', id=id))
+
+    return render_template('post/car.html', post=post, comments=comments, seller_number=seller_number)
 
 @post.route('/upload', methods=['GET', 'POST'])
 def upload_file():

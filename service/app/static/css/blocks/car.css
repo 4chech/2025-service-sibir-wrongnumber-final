@@ -1,0 +1,220 @@
+.car-details {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #000000;
+    color: #ffffff;
+}
+
+.car-header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid #ffff00;
+    padding-bottom: 20px;
+    position: relative;
+}
+
+.back-button {
+    display: inline-block;
+    color: #ffff00;
+    text-decoration: none;
+    margin-bottom: 15px;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.back-button:hover {
+    color: #ffffff;
+}
+
+.car-header h1 {
+    margin: 0;
+    color: #ffff00;
+    font-size: 32px;
+}
+
+.car-content {
+    display: grid;
+    gap: 30px;
+}
+
+.car-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.car-image {
+    border: 2px solid #ffff00;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.car-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.info-section {
+    background: rgba(255, 255, 0, 0.1);
+    border: 1px solid #ffff00;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.info-section h2 {
+    color: #ffff00;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item .label {
+    color: #ffff00;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.info-item .value {
+    font-size: 18px;
+    color: #ffffff;
+}
+
+.seller-section {
+    background: rgba(255, 255, 0, 0.1);
+    border: 1px solid #ffff00;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.seller-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.seller-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid #ffff00;
+}
+
+.seller-details p {
+    margin: 5px 0;
+}
+
+.valuer-section {
+    background: rgba(255, 255, 0, 0.1);
+    border: 1px solid #ffff00;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.price-form {
+    max-width: 400px;
+}
+
+.comments-section {
+    margin-top: 30px;
+}
+
+.comment-form {
+    margin-bottom: 30px;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.comment {
+    background: rgba(255, 255, 0, 0.05);
+    border: 1px solid rgba(255, 255, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 0, 0.2);
+}
+
+.comment-author {
+    color: #ffff00;
+    font-weight: bold;
+}
+
+.comment-date {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+}
+
+.comment-body {
+    color: #ffffff;
+    line-height: 1.5;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #ffff00;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid #ffff00;
+    border-radius: 4px;
+    color: #ffffff;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #ffffff;
+    box-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: transparent;
+    border: 2px solid #ffff00;
+    color: #ffff00;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    background: #ffff00;
+    color: #000000;
+}
+
+.no-comments {
+    color: rgba(255, 255, 255, 0.6);
+    text-align: center;
+    padding: 20px;
+} 

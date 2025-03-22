@@ -1,8 +1,6 @@
 from flask import Flask, Config, session
-from flask_login import LoginManager
-
 from .forms import LoginForm
-from .extensions import db, migrate, login_manager
+from .extensions import db, migrate
 from .config import Config
 
 from .routes.user import user, create_admin
@@ -22,12 +20,6 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     migrate.init_app(app, db)
-    login_manager.init_app(app)
-
-    # LOGIN MANAGER
-    login_manager.login_view = 'user.login'
-    login_manager.login_message = 'Вы не можете получить доступ к данной странице. Нужно сначала войти.'
-    login_manager.login_message_category = 'info'
 
     with app.app_context():
         db.create_all()

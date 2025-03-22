@@ -1,10 +1,12 @@
 from ..extensions import db
 from datetime import datetime
 
-class Rating(db.Model):
+class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    valuer_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'))
-    rating = db.Column(db.Integer)
-    comment = db.Column(db.Text)
+    valuer_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    comment = db.Column(db.String(500))
     date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Review {self.id}>'

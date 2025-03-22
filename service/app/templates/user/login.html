@@ -8,18 +8,24 @@
 
 {% block content %}
 <div class="auth-form">
-    <h2 class="auth-title">Авторизация</h2>
-    <form method="post" enctype="multipart/form-data">
-        {{ form.csrf_token }}
-        {{ form.login(class="form-control", placeholder="Логин") }}
-        {{ form.password(class="form-control", placeholder="Пароль") }}
-        
-        <div class="form-check">
-            {{ form.remember(class="form-check-input") }}
-            {{ form.remember.label(class="form-check-label") }}
+    <h2 class="auth-title">Вход</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="login">Логин</label>
+            <input type="text" class="form-control" id="login" name="login" required>
         </div>
-        
-        {{ form.submit(class="btn") }}
+        <div class="form-group">
+            <label for="password">Пароль</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn">Войти</button>
     </form>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 </div>
 {% endblock %}

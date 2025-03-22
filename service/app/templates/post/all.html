@@ -23,33 +23,30 @@
             <tr>
                 <td>
                     {% if post.seller.avatar %}
-                    <img width="50" height="50" src="{{ url_for('static', filename='upload/' + post.seller.avatar) }}" alt="Владелец" onerror="this.src='{{ url_for('static', filename='upload/default-avatar.jpg') }}'">
+                    <img width="50" height="50" src="{{ url_for('static', filename=post.seller.avatar) }}" alt="Владелец">
                     {% endif %}
                     <span class="seller-name">{{ post.seller.login }}</span>
                 </td>
                 <td>
                     {% if post.picture %}
-                    <img width="50" height="50" src="{{ url_for('static', filename='upload/' + post.picture) }}" alt="Автомобиль" onerror="this.src='{{ url_for('static', filename='upload/default-car.jpg') }}'">
+                    <img width="50" height="50" src="{{ url_for('static', filename=post.picture) }}" alt="Автомобиль">
                     {% endif %}
                     <span class="car-name">{{ post.car_mark }}</span>
                 </td>
                 <td class="price">{{ post.price if post.price else 'Не указана' }}</td>
                 <td>
-                    {% with valuer = user.query.get(post.valuer) %}
-                    {% if valuer and valuer.avatar %}
-                    <img width="50" height="50" src="{{ url_for('static', filename='upload/' + valuer.avatar) }}" alt="Оценщик" onerror="this.src='{{ url_for('static', filename='upload/default-avatar.jpg') }}'">
-                    {% endif %}
-                    <span class="valuer-name">{{ valuer.login if valuer else 'Нет оценщика' }}</span>
-                    {% endwith %}
+                    <span class="valuer-name">{{ post.valuer_login }}</span>
                 </td>
                 <td class="actions">
-                    {% if current_user.is_authenticated and post.seller.id == current_user.id %}
-                    <a href="{{ url_for('post.update', id=post.id) }}" class="btn btn-edit">Ред.</a>
-                    <a href="{{ url_for('post.delete', id=post.id) }}" class="btn btn-danger">Удалить</a>
-                    {% endif %}
-                    <a href="{{ url_for('post.details', id=post.id) }}" class="btn btn-info">Подробнее</a>
-                    {% if current_user.is_authenticated and current_user.id == post.valuer %}
-                    <a href="{{ url_for('review.create_review', post_id=post.id) }}" class="btn btn-success">Оценить авто</a>
+                    {% if session.user_id %}
+                        {% if session.user_id == post.owner %}
+                        <a href="{{ url_for('post.update', id=post.id) }}" class="btn btn-edit">Ред.</a>
+                        <a href="{{ url_for('post.delete', id=post.id) }}" class="btn btn-danger">Удалить</a>
+                        {% endif %}
+                        <a href="{{ url_for('post.details', id=post.id) }}" class="btn btn-info">Подробнее</a>
+                        {% if session.user_id == post.valuer %}
+                        <a href="{{ url_for('review.create_review', post_id=post.id) }}" class="btn btn-success">Оценить авто</a>
+                        {% endif %}
                     {% endif %}
                 </td>
             </tr>

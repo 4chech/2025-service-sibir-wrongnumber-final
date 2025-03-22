@@ -1,46 +1,50 @@
-from flask import Blueprint, request, redirect, render_template, flash
+from flask import Blueprint, request, redirect, render_template, flash, session, url_for
 from flask_login import login_required, current_user
 
-from ..models.review import Rating
-from ..extensions import db
 from ..models.post import Post
+from ..models.user import User
+from ..models.review import Review
+from ..extensions import db
 
 review = Blueprint('review', __name__)
 
-@review.route('/review/<int:post_id>/create_review', methods=['GET', 'POST'])
-@login_required
+@review.route('/review/create/<int:post_id>', methods=['GET', 'POST'])
 def create_review(post_id):
-    post = Post.query.get(post_id)  # Извлекаем пост по его ID
-    post_id = post_id
-    if post is None:  # Если пост не найден
-        flash('Пост не найден', 'error')
-        return redirect('/')
+    if not session.get('user_id'):
+        return redirect(url_for('user.login'))
+
+    post = Post.query.get_or_404(post_id)
+    
+    if session['user_id'] != post.valuer:
+        flash('У вас нет прав на оценку этого автомобиля', 'danger')
+        return redirect(url_for('post.details', id=post_id))
 
     if request.method == 'POST':
-        rating = request.form.get('rating')
         comment = request.form.get('comment')
-        # Создание объекта отзыва
-
-        review = Rating(rating=rating, comment=comment, valuer_id = current_user.id, post_id=post_id)
-
-        try:
-            db.session.add(review)  # Добавляем объект отзыва в сессию
-            db.session.commit()  # Подтверждаем изменения
-            comment = eval(comment)
-            flash(f'Ваш отзыв {comment} был отправлен владельцу, спасибо!')
-            return redirect('/')  # Перенаправляем на главную страницу
-        except Exception as e:
-            db.session.rollback()  # Откатываем изменения в случае ошибки
-            print(str(e))
-            flash('Вам запрещено оставлять отзывы.',
-                  'error')  # Сообщаем об ошибке
-
-    # Передаем объект post в шаблон, чтобы получить доступ к его атрибутам
-    return render_template('review/create_review.html', post=post)
+        
+        if comment:
+            review = Review(
+                post_id=post_id,
+                valuer_id=session['user_id'],
+                comment=comment
+            )
+            
+            try:
+                db.session.add(review)
+                db.session.commit()
+                flash('Отзыв успешно добавлен', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash('Произошла ошибка при добавлении отзыва', 'danger')
+                print(str(e))
+        
+        return redirect(url_for('post.details', id=post_id))
+    
+    return render_template('review/create.html', post=post)
 
 
 @review.route('/review/my_reviews', methods = ['GET'])
 def my_reviews():
-    reviews = Rating.query.all()  # делаем запрос в базу данных и дёргаем все записи из неё
+    reviews = Review.query.all()  # делаем запрос в базу данных и дёргаем все записи из неё
     return render_template('review/my_reviews.html', reviews=reviews) # передаём reviews в render_template
 

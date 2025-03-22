@@ -3,6 +3,8 @@ from flask_login import login_user, logout_user
 import hashlib
 import itsdangerous
 import time
+import os
+from werkzeug.utils import secure_filename
 
 from ..functions import save_picture, generate_random_phone_number
 from ..forms import RegistrationForm, LoginForm
@@ -10,7 +12,7 @@ from ..extensions import db, bcrypt
 from ..models.user import User
 from ..models.number import Number
 
-user = Blueprint('user', __name__) 
+user = Blueprint('user', __name__)
 
 
 def set_number(user_id, flag, login):
@@ -26,91 +28,136 @@ def generate_user_secret(user_data):
     return hashlib.md5(user_string.encode()).hexdigest()[:8]
 
 
-@user.route('/user/register', methods=['GET', 'POST'])
+@user.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.is_json:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request body"}), 400
-            
-        form_data = {
-            'login': data.get('login'),
-            'password': data.get('password'),
-            'flag': data.get('flag'),
-            'avatar': data.get('avatar', 'default.jpg')
-        }
-        
-        for key, value in data.items():
-            if key not in form_data:
-                form_data[key] = value
-    else:
-        form = RegistrationForm()
-        if form.validate_on_submit():
-            form_data = {
-                'login': form.login.data,
-                'password': form.password.data,
-                'flag': form.flag.data,
-                'avatar': save_picture(form.avatar.data),
-                'status': 'user'
-            }
-        else:
-            return render_template('user/register.html', form=form)
-
-    try:
-        hashed_password = bcrypt.generate_password_hash(form_data['password']).decode('utf-8')
-        form_data['password'] = hashed_password
-        
-        user = User(**form_data)
-        db.session.add(user)
-        db.session.commit()
-        
-        set_number(user.id, form_data['flag'], form_data['login'])
-        
+    if request.method == 'POST':
         if request.is_json:
-            return jsonify({
-                "message": "User registered successfully",
-                "user_id": user.id,
-                "login": user.login,
-                "status": user.status
-            }), 201
-        else:
-            flash(f"Поздравляем, {form_data['login']}! Вы успешно зарегистрированы", "success")
+            data = request.get_json()
+            login = data.get('login')
+            password = data.get('password')
+            flag = data.get('flag')
+            status = data.get('status', 'user')
+            
+            if User.query.filter_by(login=login).first():
+                return jsonify({"error": "Login already exists"}), 400
+            
+            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+            
+            user = User(
+                login=login,
+                password=hashed_password,
+                flag=flag,
+                name=login,
+                status=status,
+                avatar='default.jpg'
+            )
+            
+            try:
+                db.session.add(user)
+                db.session.commit()
+                
+                fake_number = generate_random_phone_number()
+                number = Number(
+                    owner_id=user.id,
+                    phone_number=fake_number,
+                    secret=flag,
+                    owner_login=login
+                )
+                
+                db.session.add(number)
+                db.session.commit()
+                
+                return jsonify({
+                    "message": "Registration successful",
+                    "user_id": user.id,
+                    "login": user.login,
+                    "status": user.status
+                }), 200
+                
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({"error": str(e)}), 500
+        
+        # Обычная регистрация через форму
+        login = request.form.get('login')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        flag = request.form.get('flag')
+        avatar = request.files.get('avatar')
+        
+        if User.query.filter_by(login=login).first():
+            flash('Этот логин уже занят')
+            return redirect(url_for('user.register'))
+            
+        if password != confirm_password:
+            flash('Пароли не совпадают')
+            return redirect(url_for('user.register'))
+            
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        
+        # Сохраняем аватар
+        avatar_filename = None
+        if avatar:
+            avatar_filename = save_picture(avatar)
+            if avatar_filename:
+                avatar_filename = f'upload/{avatar_filename}'
+        
+        user = User(
+            login=login,
+            password=hashed_password,
+            flag=flag,
+            name=login,
+            status='user',  # Для обычной регистрации статус всегда 'user'
+            avatar=avatar_filename or 'default.jpg'
+        )
+        
+        try:
+            db.session.add(user)
+            db.session.commit()
+            
+            # Генерируем фейковый номер и создаем запись в таблице Number
+            fake_number = generate_random_phone_number()
+            number = Number(
+                owner_id=user.id,
+                phone_number=fake_number,
+                secret=flag,
+                owner_login=login
+            )
+            
+            db.session.add(number)
+            db.session.commit()
+            
+            flash('Регистрация успешна!')
             return redirect(url_for('user.login'))
-            
-    except Exception as e:
-        db.session.rollback()
-        if request.is_json:
-            return jsonify({"error": str(e)}), 400
-        else:
-            flash(f"При регистрации произошла ошибка", "danger")
-            return render_template('user/register.html', form=form)
+        except Exception as e:
+            db.session.rollback()
+            flash('Произошла ошибка при регистрации')
+            print(str(e))
+            return redirect(url_for('user.register'))
+        
+    return render_template('user/register.html')
 
 
-@user.route('/user/login', methods=['GET', 'POST'])
+@user.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(login=form.login.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            session.clear()
-            login_user(user, remember=form.remember.data)
+    if request.method == 'POST':
+        login = request.form.get('login')
+        password = request.form.get('password')
+        user = User.query.filter_by(login=login).first()
+        
+        if user and bcrypt.check_password_hash(user.password, password):
             session['user_id'] = user.id
             session['user_status'] = user.status
-            session['_fresh'] = True  # Добавляем стандартные поля Flask-Login
-            session['_id'] = '10151015'  # Добавляем фиксированный идентификатор
-            next_page = request.args.get('next')
-            flash(f"Поздравляем, {form.login.data}! Вы успешно авторизованы", "success")
-            return redirect(next_page) if next_page else redirect(url_for('post.all'))
-        else:
-            flash(f"Ошибка входа. Пожалуйста проверьте логин и пароль!", category='danger')
-    return render_template('user/login.html', form=form)
+            session['login'] = user.login
+            return redirect(url_for('post.all'))
+        flash('Неверный логин или пароль')
+    return render_template('user/login.html')
 
 
-@user.route('/user/logout', methods=['GET', 'POST'])
+@user.route('/logout')
 def logout():
-    logout_user()
     session.clear()
-    return redirect(url_for('post.all'))
+    return redirect(url_for('user.login'))
 
 
 @user.route('/create_admin', methods=['GET'])
@@ -122,13 +169,13 @@ def create_admin():
             return "admin already exists"
         
         # Создаем нового администратора
-        hashed_password = bcrypt.generate_password_hash('SuperAdminPassword!@123').decode('utf-8')
+        hashed_password = bcrypt.generate_password_hash('admin').decode('utf-8')
         admin = User(
             login='admin',
             password=hashed_password,
             status='admin',
-            flag='SIBIRCTF{admin_is_here}',
-            avatar='default.jpg'
+            flag='CTF{admin_flag}',
+            name='Admin'
         )
         
         db.session.add(admin)
@@ -142,43 +189,43 @@ def create_admin():
         print(f'Ошибка при создании администратора: {str(e)}')
 
 
-@user.route('/api/v1/session/<user_id>', methods=['GET'])
+@user.route('/api/v1/session/<int:user_id>')
 def get_session(user_id):
-    """API endpoint для получения сессии пользователя"""
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+    user = User.query.get_or_404(user_id)
     
+    # Создаем данные сессии в том же формате, что и Flask
     session_data = {
         'user_id': user.id,
         'user_status': user.status,
-        '_fresh': True,
-        '_id': '10151015'
+        'login': user.login
     }
-    session_token = itsdangerous.URLSafeTimedSerializer(current_app.config['SECRET_KEY']).dumps(session_data)
+    
+    # Создаем валидную сессионную куки Flask
+    serializer = current_app.session_interface.get_signing_serializer(current_app)
+    session_cookie = serializer.dumps(dict(session_data))
     
     return jsonify({
-        "session": session_token,
-        "user_id": user.id,
-        "status": user.status
+        'session_cookie': session_cookie,
+        'user_id': user.id,
+        'user_status': user.status,
+        'login': user.login
     })
 
-@user.route('/api/v1/verify_session', methods=['POST'])
+
+@user.route('/api/v1/session/verify', methods=['POST'])
 def verify_session_endpoint():
-    """API endpoint для проверки сессии"""
     data = request.get_json()
-    if not data or 'session' not in data:
-        return jsonify({"error": "No session data provided"}), 400
+    if not data or 'user_id' not in data or 'user_status' not in data:
+        return jsonify({'error': 'Invalid session data'}), 400
     
-    try:
-        session_data = itsdangerous.URLSafeTimedSerializer(current_app.config['SECRET_KEY']).loads(data['session'])
-        return jsonify({
-            "valid": True,
-            "user_id": session_data['user_id'],
-            "status": session_data['user_status']
-        })
-    except:
-        return jsonify({"error": "Invalid session"}), 400
+    user = User.query.get(data['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    session['user_id'] = data['user_id']
+    session['user_status'] = data['user_status']
+    session['login'] = user.login
+    return jsonify({'message': 'Session verified'})
 
 
 

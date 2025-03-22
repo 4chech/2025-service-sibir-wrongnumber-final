@@ -1,21 +1,84 @@
 {% extends 'main/base.html' %}
 
-{% block title%} Добавление автомобиля {% endblock %}
+{% block title %}Создание публикации{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blocks/form.css') }}">
+{% endblock %}
 
 {% block content %}
-<form method = "post" enctype="multipart/form-data" class="form-control d-flex flex-column gap-2">
-    <input name = "car_mark" type = "text"  placeholder="Марка" class="form-control">
-    <!-- <input name = "price" type = "text"  placeholder="Цена" class="form-control"> -->
-    <input name = "description" placeholder = "Кратко опишите ваше авто" type = "text" class = "form-control" > <!-- Класс потом спросить -->
-    <input name = "speed" placeholder = "Максимальная скорость (км/ч)" type = "number" class = "form-control" > <!-- Класс потом спросить + тип -->
-    <input name = "handling" placeholder = "Управляемость (1-10)" type = "number" min="1" max="10" class = "form-control" >
-    <input name = "durability" placeholder = "Устойчивость (1-10)" type = "number" min="1" max="10" type = "text" class = "form-control" >
-    <input name = "fuel_consumption" placeholder = "Расход топлива (л/100 км)" type = "number" class = "form-control" >
-    <input name = "seating_capacity" placeholder = "Количество мест" type = "number" min = "1" class = "form-control" >
-    <input name = "customizations" placeholder = "Модификации" type = "text" class = "form-control" >
-    {{ form.valuer }}
-    {{ form.picture(class = "form-control")}}
+<div class="car-details">
+    <div class="car-header">
+        <a href="{{ url_for('post.all') }}" class="back-button">← Назад к списку</a>
+        <h1>Создание публикации</h1>
+    </div>
 
-    <input placeholder = "Добавить" type = "submit" class ="btn btn-success">
-</form>
+    <div class="car-content">
+        <div class="car-main">
+            <div class="car-info">
+                <form method="POST" enctype="multipart/form-data" id="createPostForm">
+                    <div class="info-section">
+                        <h2>Основная информация</h2>
+                        <div class="info-grid">
+                            <div class="form-group">
+                                <label for="car_mark">Марка автомобиля</label>
+                                <input type="text" class="form-control" id="car_mark" name="car_mark" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="description">Описание</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="speed">Скорость (км/ч)</label>
+                                <input type="number" class="form-control" id="speed" name="speed" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="handling">Управляемость (1-10)</label>
+                                <input type="number" class="form-control" id="handling" name="handling" min="1" max="10" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="durability">Прочность (1-10)</label>
+                                <input type="number" class="form-control" id="durability" name="durability" min="1" max="10" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="fuel_consumption">Расход топлива (л/100км)</label>
+                                <input type="number" class="form-control" id="fuel_consumption" name="fuel_consumption" step="0.1" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="seating_capacity">Количество мест</label>
+                                <input type="number" class="form-control" id="seating_capacity" name="seating_capacity" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="customizations">Модификации</label>
+                                <textarea class="form-control" id="customizations" name="customizations" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="picture">Фотография автомобиля</label>
+                                <input type="file" class="form-control" id="picture" name="picture" accept="image/*" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" onclick="this.disabled=true;this.form.submit();">Создать публикацию</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 {% endblock %}
