@@ -68,7 +68,6 @@ def put_flag(ip, port, flag_id, flag):
         
         # Регистрация пользователя через форму
         register_url = f"http://{ip}:{port}/register"
-        print(f"[DEBUG] Register URL: {register_url}")
         
         # Открываем файл аватарки и готовим данные формы
         with open(avatar_path, 'rb') as avatar_file:
@@ -89,7 +88,6 @@ def put_flag(ip, port, flag_id, flag):
                 files=files
             )
             print(f"[DEBUG] Register response: {response.status_code}")
-            print(f"[DEBUG] Register content: {response.text[:500]}...")
             
             # Проверяем, есть ли в ответе сообщение об ошибке
             if "Этот логин уже занят" in response.text:
@@ -112,18 +110,14 @@ def put_flag(ip, port, flag_id, flag):
             
         # Логин через форму
         login_url = f"http://{ip}:{port}/login"
-        print(f"[DEBUG] Login URL: {login_url}")
-        
         login_data = {
             'login': flag_id,
             'password': password
         }
-        print(f"[DEBUG] Login data: {login_data}")
         
         print("[DEBUG] Sending login request...")
         response = session.post(login_url, data=login_data)
         print(f"[DEBUG] Login response: {response.status_code}")
-        print(f"[DEBUG] Login content: {response.text[:500]}...")
         
         if response.status_code != 200 and response.status_code != 302:
             print("[ERROR] Login failed")
@@ -132,9 +126,6 @@ def put_flag(ip, port, flag_id, flag):
 
         # Проверяем успешность логина
         main_page = session.get(f"http://{ip}:{port}/")
-        print(f"[DEBUG] Main page response: {main_page.status_code}")
-        print(f"[DEBUG] Main page content: {main_page.text[:500]}...")
-        
         if "Выйти" not in main_page.text:
             print("[ERROR] Login verification failed")
             service_corrupt()
@@ -142,11 +133,12 @@ def put_flag(ip, port, flag_id, flag):
 
         # Проверка флага на странице информации о номере
         check_url = f"http://{ip}:{port}/api/v1/numbers/checkout/{flag_id}"
-        print(f"[DEBUG] Check flag URL: {check_url}")
+        print(f"[DEBUG] Checking flag at URL: {check_url}")
         
         check_response = session.get(check_url)
-        print(f"[DEBUG] Check flag response: {check_response.status_code}")
-        print(f"[DEBUG] Check flag content: {check_response.text[:500]}...")
+        print(f"[DEBUG] Flag page response: {check_response.status_code}")
+        print(f"[DEBUG] Flag page content:")
+        print(check_response.text)
         
         if check_response.status_code != 200:
             print("[ERROR] Failed to get flag page")
@@ -173,9 +165,6 @@ def put_flag(ip, port, flag_id, flag):
 
     except Exception as e:
         print(f"[ERROR] Unexpected error: {str(e)}")
-        print(f"[ERROR] Exception type: {type(e)}")
-        import traceback
-        print(f"[ERROR] Traceback: {traceback.format_exc()}")
         service_down()
         return None
 
@@ -197,7 +186,6 @@ def check_flag(ip, port, flag_id, flag):
         
         response = session.post(login_url, data=login_data)
         print(f"[DEBUG] Login response: {response.status_code}")
-        print(f"[DEBUG] Login content: {response.text[:500]}...")
         
         if response.status_code != 200 and response.status_code != 302:
             print("[ERROR] Login failed")
@@ -213,9 +201,12 @@ def check_flag(ip, port, flag_id, flag):
 
         # Проверка флага на странице информации о номере
         check_url = f"http://{ip}:{port}/api/v1/numbers/checkout/{flag_id}"
+        print(f"[DEBUG] Checking flag at URL: {check_url}")
+        
         api_response = session.get(check_url)
-        print(f"[DEBUG] Check flag response: {api_response.status_code}")
-        print(f"[DEBUG] Check flag content: {api_response.text[:500]}...")
+        print(f"[DEBUG] Flag page response: {api_response.status_code}")
+        print(f"[DEBUG] Flag page content:")
+        print(api_response.text)
         
         if api_response.status_code != 200:
             print("[ERROR] Failed to get flag page")
