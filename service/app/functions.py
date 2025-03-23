@@ -5,7 +5,7 @@ from faker import Faker
 from PIL import Image
 import io
 
-fake = Faker('en_US')
+fake = Faker()
 
 def save_picture(picture_data):
     if not picture_data:

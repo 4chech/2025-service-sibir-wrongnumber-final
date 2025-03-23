@@ -6,6 +6,6 @@ ADD . /app
 
 RUN apt install gcc -y
 
-RUN pip install -r requirements.txt
+RUN pip install -r requirements_win.txt
 
 CMD ["uwsgi", "app.ini"]

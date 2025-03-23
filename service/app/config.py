@@ -17,7 +17,7 @@ class Config(object):
     USER = os.environ.get('POSTGRES_USER', 'administrator')
     PASSWORD = os.environ.get('POSTGRES_PASSWORD', 'qwerty')
     HOST = os.environ.get('POSTGRES_HOST', '127.0.0.1')
-    PORT = os.environ.get('POSTGRES_PORT', '5432')
+    PORT = os.environ.get('POSTGRES_PORT', '5532')
     DB = os.environ.get('POSTGRES_DB', 'wrongnumber')
 
     SQLALCHEMY_DATABASE_URI = f'postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}'
