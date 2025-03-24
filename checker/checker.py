@@ -314,7 +314,7 @@ def create_post(ip, port, session):
         print("\nSelected description:")
         print(description)
 
-        # Подготавливаем данные формы
+        
         data = {
             'car_mark': car_name,
             'description': description,
@@ -326,13 +326,13 @@ def create_post(ip, port, session):
             'customizations': 'Test Customizations'
         }
 
-        # Открываем файл картинки
+        
         with open(car_path, 'rb') as car_file:
             files = {
                 'picture': (random_car, car_file, 'image/jpeg')
             }
             
-            # Отправляем POST запрос
+            
             response = session.post(
                 post_url,
                 data=data,
@@ -354,9 +354,6 @@ def create_post(ip, port, session):
         print(f"\nError during create post: {str(e)}")
         service_down()
         return False
-
-def create_comment():
-    pass
 
 def logout(ip, port, session):
     try:
@@ -380,16 +377,16 @@ def logout(ip, port, session):
         return False
 
 if __name__ == "__main__":
-    if len(sys.argv) != 6:
+    if len(sys.argv) != 5:
         print(f"\nUsage: {sys.argv[0]} <ip> <port> <method> <flag_id> <flag>\n")
         print(f"Example: {sys.argv[0]} 127.0.0.1 8080 put flag_id flag_value\n")
         exit(0)
 
     ip = sys.argv[1]
-    port = sys.argv[2]
-    method = sys.argv[3]
-    flag_id = sys.argv[4]
-    flag = sys.argv[5]
+    port = 9853
+    method = sys.argv[2]
+    flag_id = sys.argv[3]
+    flag = sys.argv[4]
 
     try:
         if method == "put":
