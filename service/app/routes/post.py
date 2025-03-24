@@ -32,7 +32,7 @@ def all():
         if post.valuer:
             valuer_user = User.query.get(post.valuer)
             if valuer_user:
-                # Добавляем информацию об оценщике
+                
                 post.valuer_login = valuer_user.login
                 post.valuer_user = valuer_user
             else:
@@ -61,7 +61,7 @@ def create():
         seating_capacity = request.form.get('seating_capacity')
         customizations = request.form.get('customizations')
         
-        # Валидация числовых полей
+        
         try:
             speed = int(speed)
             handling = int(handling)
@@ -93,7 +93,7 @@ def create():
             flash('Пожалуйста, введите корректные числовые значения', 'danger')
             return redirect(url_for('post.create'))
             
-        # Получаем файл из request.files вместо form.picture.data
+        
         picture = request.files.get('picture')
         if not picture:
             flash("Пожалуйста, загрузите изображение", "danger")
@@ -106,7 +106,7 @@ def create():
             
         user_number = Number.query.filter_by(owner_id=session['user_id']).first()
         
-        # Получаем всех пользователей, кроме текущего и админа
+        
         valuers = User.query.filter(
             User.id != session['user_id'],
             User.status != 'admin'
@@ -116,7 +116,7 @@ def create():
             flash("Нет доступных оценщиков для назначения", "danger")
             return redirect(url_for('post.all'))
 
-        # Выбираем случайного оценщика
+        
         valuer = random.choice(valuers)
         
         post = Post(
@@ -166,7 +166,7 @@ def update(id):
             seating_capacity = request.form.get('seating_capacity')
             customizations = request.form.get('customizations')
 
-            # Валидация числовых полей
+            
             try:
                 speed = int(speed)
                 handling = int(handling)

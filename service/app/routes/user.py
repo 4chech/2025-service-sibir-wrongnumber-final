@@ -78,7 +78,7 @@ def register():
                 db.session.rollback()
                 return jsonify({"error": str(e)}), 500
         
-        # Обычная регистрация через форму
+        
         login = request.form.get('login')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
@@ -95,7 +95,7 @@ def register():
             
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         
-        # Сохраняем аватар
+        
         avatar_filename = None
         if avatar:
             avatar_filename = save_picture(avatar)
@@ -107,7 +107,7 @@ def register():
             password=hashed_password,
             flag=flag,
             name=login,
-            status='user',  # Для обычной регистрации статус всегда 'user'
+            status='user',  
             avatar=avatar_filename or 'default.jpg'
         )
         
@@ -115,7 +115,7 @@ def register():
             db.session.add(user)
             db.session.commit()
             
-            # Генерируем фейковый номер и создаем запись в таблице Number
+           
             fake_number = generate_random_phone_number()
             number = Number(
                 owner_id=user.id,
@@ -163,25 +163,25 @@ def logout():
 @user.route('/create_admin', methods=['GET'])
 def create_admin():
     try:
-        # Проверяем, существует ли уже администратор
+        
         admin = User.query.filter_by(login='admin').first()
         if admin:
             return "admin already exists"
         
-        # Создаем нового администратора
+        
         hashed_password = bcrypt.generate_password_hash('SuperAdminSecretPassword').decode('utf-8')
         admin = User(
             login='admin',
             password=hashed_password,
             status='admin',
-            flag='CTF{admin_flag}',
+            flag='sibirctf2025{admin_flag}',
             name='Admin'
         )
         
         db.session.add(admin)
         db.session.commit()
         
-        # Создаем номер для администратора
+        
         set_number(admin.id, admin.flag, admin.login)
         
     except Exception as e:
@@ -193,14 +193,14 @@ def create_admin():
 def get_session(user_id):
     user = User.query.get_or_404(user_id)
     
-    # Создаем данные сессии в том же формате, что и Flask
+    
     session_data = {
         'user_id': user.id,
         'user_status': user.status,
         'login': user.login
     }
     
-    # Создаем валидную сессионную куки Flask
+    
     serializer = current_app.session_interface.get_signing_serializer(current_app)
     session_cookie = serializer.dumps(dict(session_data))
     

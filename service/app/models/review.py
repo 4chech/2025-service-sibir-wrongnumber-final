@@ -5,7 +5,7 @@ class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id', ondelete='CASCADE'))
     valuer_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    rating = db.Column(db.Integer)  # Оценка от 1 до 10
+    rating = db.Column(db.Integer)  
     comment = db.Column(db.String(500))
     date = db.Column(db.DateTime, default=datetime.utcnow)
     

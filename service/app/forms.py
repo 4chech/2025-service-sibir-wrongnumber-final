@@ -8,7 +8,7 @@ from .models.user import User
 
 
 
-# Валидаторы вообще убрать можно - уязвимость. Надо прочитать про них. В идеале вообще удалить все валидаторы. Чтобы инъекции были и т.д.
+
 class RegistrationForm(Form):
     login = StringField('Логин', validators=[DataRequired(), Length(min=2, max=20)], render_kw={
         'class':'form-control',
@@ -17,7 +17,7 @@ class RegistrationForm(Form):
     flag = StringField('Номер телефона', validators=[DataRequired(), Length(min=2, max=60)], render_kw={})
     password = PasswordField('Пароль', validators=[DataRequired()])
     confirm_password = PasswordField('Подтвердтие пароль', validators=[DataRequired(), EqualTo('password')])
-    avatar = FileField('Загрузите своё фото', validators=[DataRequired()]) # тут мы ставив валидаторы, чтобы нам случайно чего опасного не закинули - в целом уяза для CTF-ки
+    avatar = FileField('Загрузите своё фото', validators=[DataRequired()]) 
     submit = SubmitField('Зарегистрироваться')
 
 
@@ -49,7 +49,7 @@ class LoginForm(Form):
 
 
 class CarCreateForm(Form):
-    picture = FileField('Загрузите своё фото', validators=[DataRequired()]) # тут мы ставив валидаторы, чтобы нам случайно чего опасного не закинули - в целом уяза для CTF-ки
+    picture = FileField('Загрузите своё фото', validators=[DataRequired()]) 
 
 
 class ReviewForm(Form):

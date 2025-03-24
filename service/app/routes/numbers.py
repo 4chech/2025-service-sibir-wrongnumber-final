@@ -21,13 +21,13 @@ def all_numbers():
 @numbers.route('/api/v1/numbers/checkout/<string:login>',  methods=['GET', 'POST'])
 def checkout(login):
     global is_admin
-    # Ищем номер по логину пользователя
+    
     number = Number.query.filter_by(owner_login=login).first()
     
     if not number:
         return jsonify({"error": "Number not found"}), 404
 
-    # Проверяем, является ли пользователь админом или владельцем номера
+    
     is_admin = session.get('user_status') == 'admin'
     is_owner = session.get('user_id') == number.owner_id
     can_view_secret = is_admin or is_owner
@@ -42,7 +42,7 @@ def checkout(login):
                 "owner_login": number.owner_login,
             }
             
-            # Добавляем секрет только если пользователь имеет права
+            
             if can_view_secret:
                 response_data["secret"] = number.secret
                 
