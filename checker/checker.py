@@ -185,28 +185,51 @@ def check_flag(ip, port, flag_id, flag):
         }
         
         response = session.post(login_url, data=login_data)
-        print(f"[DEBUG] Login response: {response.status_code}")
-        
         if response.status_code != 200 and response.status_code != 302:
             print("[ERROR] Login failed")
             service_corrupt()
             return False
 
-        # Проверяем успешность логина
         main_page = session.get(f"http://{ip}:{port}/")
         if "Выйти" not in main_page.text:
             print("[ERROR] Login verification failed")
             service_corrupt()
             return False
 
+        # Проверка наличия flag_id на странице /api/v1/numbers
+        numbers_url = f"http://{ip}:{port}/api/v1/numbers"
+        print(f"\n[DEBUG] Checking flag_id on numbers page...")
+        
+        numbers_response = session.get(numbers_url)
+        if numbers_response.status_code != 200:
+            print("[ERROR] Failed to get numbers page")
+            service_corrupt()
+            return False
+
+        # Парсим HTML страницу для поиска flag_id
+        soup = BeautifulSoup(numbers_response.text, 'html.parser')
+        
+        # Ищем все строки таблицы и проверяем наличие flag_id в колонке владельца
+        found_flag_id = False
+        table_rows = soup.find_all('tr')
+        
+        for row in table_rows:
+            cells = row.find_all('td')
+            if len(cells) >= 3:
+                owner_cell = cells[2]
+                if flag_id in owner_cell.text:
+                    print(f"[SUCCESS] Found flag_id '{flag_id}' in numbers table")
+                    found_flag_id = True
+                    break
+
+        if not found_flag_id:
+            print(f"[ERROR] Flag ID '{flag_id}' not found on numbers page")
+            service_corrupt()
+            return False
+
         # Проверка флага на странице информации о номере
         check_url = f"http://{ip}:{port}/api/v1/numbers/checkout/{flag_id}"
-        print(f"[DEBUG] Checking flag at URL: {check_url}")
-        
         api_response = session.get(check_url)
-        print(f"[DEBUG] Flag page response: {api_response.status_code}")
-        print(f"[DEBUG] Flag page content:")
-        print(api_response.text)
         
         if api_response.status_code != 200:
             print("[ERROR] Failed to get flag page")
@@ -215,7 +238,6 @@ def check_flag(ip, port, flag_id, flag):
 
         # Парсим HTML страницу для поиска флага
         soup = BeautifulSoup(api_response.text, 'html.parser')
-        # Ищем span с флагом после strong с текстом "Флаг:"
         flag_label = soup.find('strong', string='Флаг:')
         if not flag_label:
             print("[ERROR] Flag label not found on page")
@@ -230,8 +252,6 @@ def check_flag(ip, port, flag_id, flag):
 
         # Проверка видимости flag_id на странице всех постов
         posts_response = session.get(f"http://{ip}:{port}/")
-        print(f"[DEBUG] Posts page response: {posts_response.status_code}")
-        
         if posts_response.status_code != 200:
             print("[ERROR] Failed to get posts page")
             service_corrupt()
@@ -244,8 +264,6 @@ def check_flag(ip, port, flag_id, flag):
 
         # Выход из системы
         logout_response = session.get(f"http://{ip}:{port}/logout")
-        print(f"[DEBUG] Logout response: {logout_response.status_code}")
-        
         if logout_response.status_code != 200 and logout_response.status_code != 302:
             print("[ERROR] Logout failed")
             service_corrupt()
@@ -283,6 +301,7 @@ def get_random_description():
     except Exception as e:
         print(f"Error reading description file: {str(e)}")
         return "Test Description"
+    
 
 def create_post(ip, port, session):
     try:
@@ -378,8 +397,8 @@ def logout(ip, port, session):
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print(f"\nUsage: {sys.argv[0]} <ip> <port> <method> <flag_id> <flag>\n")
-        print(f"Example: {sys.argv[0]} 127.0.0.1 8080 put flag_id flag_value\n")
+        print(f"\nUsage: {sys.argv[0]} <ip> <method> <flag_id> <flag>\n")
+        print(f"Example: {sys.argv[0]} 127.0.0.1 put flag_id flag_value\n")
         exit(0)
 
     ip = sys.argv[1]
