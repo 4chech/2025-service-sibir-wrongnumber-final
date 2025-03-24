@@ -4,6 +4,7 @@ import requests
 import random
 import os
 import hashlib
+import time
 from bs4 import BeautifulSoup
 from requests_toolbelt import MultipartEncoder
 
@@ -36,7 +37,7 @@ def get_random_login():
             logins = f.readlines()
             return random.choice(logins).strip()
     except Exception as e:
-        print(f"Error reading logins file: {str(e)}")
+        #print(f"Error reading logins file: {str(e)}")
         return None
 
 def generate_password(flag_id):
@@ -53,14 +54,10 @@ def put_flag(ip, port, flag_id, flag):
         
         # Проверяем наличие директории с аватарками
         if not os.path.exists("images/avatars"):
-            print("[ERROR] Directory images/avatars not found")
-            service_corrupt()
             return None
 
         avatar_files = [f for f in os.listdir("images/avatars") if f.endswith(('.jpg', '.png', '.jpeg'))]
         if not avatar_files:
-            print("[ERROR] No avatar images found")
-            service_corrupt()
             return None
 
         random_avatar = random.choice(avatar_files)
@@ -92,11 +89,8 @@ def put_flag(ip, port, flag_id, flag):
             # Проверяем, есть ли в ответе сообщение об ошибке
             if "Этот логин уже занят" in response.text:
                 print("[ERROR] Login already exists")
-                service_corrupt()
                 return None
             if "Пароли не совпадают" in response.text:
-                print("[ERROR] Passwords do not match")
-                service_corrupt()
                 return None
             if "Произошла ошибка при регистрации" in response.text:
                 print("[ERROR] Registration error occurred")
@@ -137,8 +131,6 @@ def put_flag(ip, port, flag_id, flag):
         
         check_response = session.get(check_url)
         print(f"[DEBUG] Flag page response: {check_response.status_code}")
-        print(f"[DEBUG] Flag page content:")
-        print(check_response.text)
         
         if check_response.status_code != 200:
             print("[ERROR] Failed to get flag page")
@@ -147,7 +139,6 @@ def put_flag(ip, port, flag_id, flag):
 
         # Парсим HTML страницу для поиска флага
         soup = BeautifulSoup(check_response.text, 'html.parser')
-        # Ищем span с флагом после strong с текстом "Флаг:"
         flag_label = soup.find('strong', string='Флаг:')
         if not flag_label:
             print("[ERROR] Flag label not found on page")
@@ -396,17 +387,19 @@ def logout(ip, port, session):
         return False
 
 if __name__ == "__main__":
+    start_time = time.time()
+    
     if len(sys.argv) != 5:
         print(f"\nUsage: {sys.argv[0]} <ip> <method> <flag_id> <flag>\n")
         print(f"Example: {sys.argv[0]} 127.0.0.1 put flag_id flag_value\n")
         exit(0)
 
     ip = sys.argv[1]
-    port = 9853
+    port = 5000
     method = sys.argv[2]
     flag_id = sys.argv[3]
     flag = sys.argv[4]
-
+    
     try:
         if method == "put":
             session = put_flag(ip, port, flag_id, flag)
@@ -417,13 +410,13 @@ if __name__ == "__main__":
             if not logout(ip, port, session):
                 service_corrupt()
             service_up()
-        
+    
         elif method == "check":
             if check_flag(ip, port, flag_id, flag):
                 service_up()
             else:
                 service_corrupt()
-        
+    
         else:
             print(f"Unknown method: {method}")
             exit(1)
@@ -431,3 +424,9 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error during execution: {str(e)}")
         service_down()
+    finally:
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"\n[DEBUG] Checker execution time: {execution_time:.2f} seconds")
+
+    

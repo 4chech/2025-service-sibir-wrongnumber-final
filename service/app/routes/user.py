@@ -169,7 +169,7 @@ def create_admin():
             return "admin already exists"
         
         # Создаем нового администратора
-        hashed_password = bcrypt.generate_password_hash('admin').decode('utf-8')
+        hashed_password = bcrypt.generate_password_hash('SuperAdminSecretPassword').decode('utf-8')
         admin = User(
             login='admin',
             password=hashed_password,

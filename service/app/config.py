@@ -4,9 +4,13 @@ from getpass import getpass
 import random
 import string
 
-def generate_weak_secret():
-    # Генерируем слабый секретный ключ из 8 символов
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+eleptic_crypto = lambda: (lambda p=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F, 
+    a=0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798,
+    b=0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8,
+    x=0x100000,
+    y=0x10c9b4: 
+    str(sum((lambda x, y, p, a, b: [(x := (x * x + a) % p, y := (y * y + b) % p) for _ in range(100)][-1])(x, y, p, a, b)))[0:6])()
+
 
 class Config(object):
     APPNAME = 'app'
@@ -33,14 +37,11 @@ class Config(object):
         }
     }
     
-    # Слабый секретный ключ для CTF
-    SECRET_KEY = '10151015'
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     
-    # Настройки сессии для CTF
+    SECRET_KEY = eleptic_crypto()
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     SESSION_COOKIE_SECURE = False
     SESSION_COOKIE_HTTPONLY = False
     SESSION_COOKIE_SAMESITE = None
-    
     DEBUG = True

@@ -39,9 +39,6 @@ instance/
 *.db
 *.sqlite3
 
-# Environment variables
-.env
-
 # Logs
 *.log
 
