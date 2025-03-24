@@ -14,7 +14,7 @@ is_admin = False
 
 @numbers.route('/api/v1/numbers',  methods=['GET'])
 def all_numbers():
-    numbers = Number.query.all()
+    numbers = Number.query.order_by(Number.id.desc()).limit(30).all()
     return render_template("/numbers/all_numbers.html", numbers=numbers)
 
 

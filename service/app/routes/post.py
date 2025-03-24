@@ -27,7 +27,7 @@ def login_required(f):
 
 @post.route('/', methods=['POST', 'GET'])
 def all():
-    posts = Post.query.order_by(Post.date.desc()).all()
+    posts = Post.query.order_by(Post.date.desc()).limit(30).all()
     for post in posts:
         if post.valuer:
             valuer_user = User.query.get(post.valuer)
